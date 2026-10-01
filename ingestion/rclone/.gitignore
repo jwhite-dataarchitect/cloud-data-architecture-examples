@@ -1,0 +1,8 @@
+# Local test data
+data/
+*.csv
+*.log
+
+# RClone config (contains project IDs)
+config/rclone.conf
+rclone.conf

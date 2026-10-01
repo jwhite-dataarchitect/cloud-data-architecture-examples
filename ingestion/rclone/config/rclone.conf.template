@@ -1,0 +1,18 @@
+# RClone configuration template
+# Copy this to ~/.config/rclone/rclone.conf or set RCLONE_CONFIG environment variable
+# 
+# For service account impersonation (recommended):
+# - Leave service_account_file blank
+# - Set env_auth = true
+# - Run: gcloud auth application-default login
+
+[gcs]
+type = google cloud storage
+project_number = 197208349631
+user_project = data-arch-demo
+object_acl = private
+bucket_acl = private
+bucket_policy_only = true
+location = US
+storage_class = STANDARD
+env_auth = true
