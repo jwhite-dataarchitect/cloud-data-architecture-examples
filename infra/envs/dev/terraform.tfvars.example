@@ -1,0 +1,8 @@
+# Copy to terraform.tfvars and fill in real values.
+# terraform.tfvars is gitignored and will NOT be committed.
+
+# Project ID (string) or project number; project ID string is preferred
+project_id = "data-arch-demp"
+
+# Uncomment after running scripts/bootstrap.sh to use impersonation (no key files):
+# impersonate_service_account = "terraform-runner@your-project-id-here.iam.gserviceaccount.com"
