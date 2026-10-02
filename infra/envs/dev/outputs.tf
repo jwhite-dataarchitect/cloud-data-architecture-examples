@@ -17,3 +17,8 @@ output "tf_service_account_email" {
   description = "Email of the Terraform service account"
   value       = module.iam.tf_service_account_email
 }
+
+output "artifact_registry_url" {
+  description = "Docker image prefix URL for the rclone-ingestion repository"
+  value       = module.artifact_registry.repository_url
+}

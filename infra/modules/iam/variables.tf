@@ -13,8 +13,11 @@ variable "tf_sa_roles" {
   type        = list(string)
   description = "Minimal project-level roles granted to the Terraform service account"
   default = [
-    "roles/storage.admin",
-    "roles/bigquery.admin",
-    "roles/iam.serviceAccountUser"
-  ]
+  "roles/storage.admin",
+  "roles/bigquery.admin",
+  "roles/iam.serviceAccountUser",
+  "roles/artifactregistry.admin",
+  "roles/iam.serviceAccountAdmin",
+  "roles/run.admin",
+]
 }

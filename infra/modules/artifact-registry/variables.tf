@@ -26,13 +26,3 @@ variable "tf_service_account_email" {
   description = "Email of the Terraform runner service account (needs push access)"
 }
 
-variable "untagged_cleanup_days" {
-  type        = number
-  description = "Days to keep untagged images before cleanup. SHA-tagged images are never affected."
-  default     = 1
-
-  validation {
-    condition     = var.untagged_cleanup_days >= 1
-    error_message = "untagged_cleanup_days must be at least 1 day."
-  }
-}
