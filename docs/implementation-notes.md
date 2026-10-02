@@ -1,228 +1,167 @@
 # Implementation Notes
 
 ## Project Overview
-**Repository:** `jwhite-dataarchitect/cloud-data-architecture-examples`  
-**Project focus:** Cloud data architecture examples using Terraform IaC, starting with GCP and expanding later to Azure and AWS.  
-**Primary goal:** Build small, low-cost, reproducible demos that can be spun up and torn down quickly.
+**Repository:** `jwhite-dataarchitect/ingestion-orchestration`
+**Project focus:** Cloud-native ingestion orchestration on GCP — containerized rclone transfers triggered as Cloud Run Jobs, all infrastructure as Terraform.
+**Primary goal:** Build small, low-cost, reproducible demos that can be spun up and torn down quickly. Portfolio-first: every component must be demonstrable and documented.
 
 ---
 
 ## Source of Truth
 This document tracks:
-- what has already been completed
+- what has been completed (with evidence)
 - current implementation decisions
-- next steps for each day
+- next steps for each remaining day
 - risks, constraints, and checkpoints
 
 Update this file as progress is made so future sessions can resume quickly.
 
 ---
 
-## Completed Today
+## Status Dashboard
 
-### Repository and local setup
-- Created GitHub repository: `jwhite-dataarchitect/cloud-data-architecture-examples`
-- Established local folder structure under `ingestion-orchestration`
-- Installed and verified:
-  - Terraform
-  - Git
-  - VS Code CLI (`code`)
-  - Google Cloud CLI (`gcloud`)
-- Fixed local Mac permission issues affecting:
-  - `~/.config`
-  - `~/.zshrc`
-- Configured GitHub authentication using a Personal Access Token and macOS Keychain credential helper
-
-### Day 1 scaffold
-- Created repo scaffold for:
-  - `README.md`
-  - `docs/`
-  - `scripts/`
-  - `infra/modules/gcs`
-  - `infra/modules/bigquery`
-  - `infra/modules/iam`
-  - `infra/modules/compute`
-  - `infra/envs/dev`
-- Added minimal Terraform root configuration in `infra/envs/dev`
-- Ran and passed:
-  - `terraform init`
-  - `terraform fmt -check -recursive`
-  - `terraform validate`
-- Added Terraform module stub files for:
-  - `gcs`
-  - `bigquery`
-  - `iam`
-  - `compute`
-
-### Current status
-- Day 1 scaffold is complete
-- Repo is connected to GitHub and pushed
-- Ready to begin Day 2 work
+| Day | Theme | Status |
+|---|---|---|
+| 1 | Repo scaffold + local tooling | ✅ Complete |
+| 2 | GCP foundation, IAM, landing bucket | ✅ Complete |
+| 3 | RClone ingestion container | ✅ Complete |
+| 4 | Artifact Registry + Cloud Run Job smoke test | ✅ Complete |
+| 5 | Secrets + real config-driven transfer | ⬜ Next |
+| 6 | Scheduling + idempotency + alerting | ⬜ Planned |
+| 7 | Teardown rehearsal + README finale | ⬜ Planned |
 
 ---
 
-## Day 2 Plan: GCP Foundation, IAM, and Landing Storage
+## Days 1–4 Completion Log
+
+### Day 1 — Scaffold
+- Repo created, local folder structure under `ingestion-orchestration`
+- Tooling verified: Terraform, Git, VS Code CLI, gcloud
+- Terraform module stubs: `gcs`, `bigquery`, `iam`, `compute`; env root `infra/envs/dev`
+- `terraform init` / `fmt -check` / `validate` all green
+
+### Day 2 — GCP Foundation
+- Dedicated project: `data-arch-demo` (isolated for cost/teardown)
+- `terraform-runner@` SA created via `scripts/bootstrap.sh`; local state (remote state deferred)
+- Landing bucket: `gs://data-arch-demo-landing-dev` via `modules/gcs`
+- Least-privilege IAM via `modules/iam` role list pattern
+
+### Day 3 — RClone Container
+- `ingestion/rclone/Dockerfile`: base `rclone/rclone:1.75.1` (digest-pinned), non-root user, `scripts/` baked in
+- Dry-run verified locally; sync scripts parameterized src/dst with safe-fail logging
+- `cloudbuild.yaml` added (targets gcr.io — modernization deferred to Day 5)
+
+### Day 4 — Artifact Registry + Cloud Run Job ✅
+**Evidence:** execution `rclone-ingestion-dev-6vtzp` succeeded; logs show
+`rclone v1.75.1`, `os/arch: amd64`, `exit(0)`; image `sha256:ec8572b9...`.
+
+- `modules/artifact-registry`: repo `rclone-ingestion`, writer binding for terraform-runner
+- `modules/cloud-run-job`: job `rclone-ingestion-dev` + dedicated execution SA `rclone-runner@`
+- Docker cred-helper auth to `us-central1-docker.pkg.dev`; pushed `v0.1.0` (arm64 — rejected), rebuilt `v0.1.1` (amd64 — deployed)
+
+**War stories (full detail in README):**
+1. Provider addressing: use full `registry.terraform.io/hashicorp/google`, not the error message's deprecated shorthand
+2. IAM least-privilege expansion ×3 — each new capability = one committed grant (see role history below)
+3. IAM propagation race → `-target=module.iam` sequencing
+4. Apple Silicon arm64 image rejected by Cloud Run → `buildx --platform linux/amd64`
+5. Tainted + deletion-protected deadlock → `terraform untaint` when resource is healthy; two-pass flag flip when it must die
+
+**terraform-runner role history (audit trail):**
+
+| Day | Grant | Triggered by |
+|---|---|---|
+| 2 | storage.admin, bigquery.admin, iam.serviceAccountUser | Bootstrap |
+| 4 | artifactregistry.admin | 403 creating repo |
+| 4 | iam.serviceAccountAdmin | 403 creating execution SA |
+| 4 | run.admin | 403 creating Cloud Run job |
+
+---
+
+## Architecture Decision: NAS/Tailscale descoped (Day 4 decision)
+
+Original plan included Tailscale subnet routing to reach a home NAS.
+**Decision:** dropped. Tailscale isn't installed; more importantly, VPN plumbing is the
+least *demonstrable* part of the project — a portfolio reviewer can't verify a home NAS.
+
+**Replacement:** the NAS becomes a config-driven rclone "remote". Day 5 uses a
+simulated external source (second GCS bucket and/or public HTTP dataset). The job
+definition is source-agnostic: swapping in a Tailscale-routed SMB remote later is a
+pure config change, not an architecture change. Documented as Future Work.
+
+**What replaces it in the schedule:** idempotency + scheduling (Day 6) — the features
+that actually justify the name "orchestration".
+
+---
+
+## Day 5 Plan: Secrets + Real Config-Driven Transfer
 
 ### Objective
-Create the minimal GCP environment needed for the project while keeping cost low and teardown simple.
+Replace the `rclone version` smoke test with a real, secrets-backed, config-driven transfer.
 
 ### Tasks
-1. Decide the GCP project strategy
-   - Use a dedicated GCP project for this demo work
-   - Keep project boundaries isolated for cost and cleanup simplicity
+1. **Secret Manager**: store `rclone.conf`; mount into job via `volumes.secret`
+   (schema already confirmed in provider docs dump from Day 4)
+2. **entrypoint.sh env-prefix wiring**: `RCLONE_CONFIG_GCS_*` overlays so remotes
+   can be tuned per-env without rebuilding the image
+3. **Simulated external source**: public HTTP dataset or a second GCS bucket
+   acting as "external SFTP"; destination = landing bucket
+4. **First real transfer** with verification logging (file counts, checksums)
+5. Modernize `cloudbuild.yaml` → push to Artifact Registry (not gcr.io),
+   tag by `$SHORT_SHA`, keep `rclone version` test step; wire `gcloud builds
+   submit` as the blessed build path (kills the arm64 failure mode structurally)
 
-2. Decide Terraform state strategy
-   - Start with a simple bootstrap approach
-   - Move to remote state in GCS after the landing bucket exists
-
-3. Create Terraform service account
-   - Use a dedicated service account for IaC actions
-   - Grant only the minimal roles required
-
-4. Create landing GCS bucket
-   - This bucket will serve as the raw ingestion landing zone
-   - Enable cost controls and cleanup-friendly settings
-
-5. Add IAM bindings
-   - Limit privileges to what the project requires
-   - Avoid broad editor/owner access
-
-6. Add bootstrap and teardown scripts
-   - `scripts/bootstrap.sh`
-   - `scripts/teardown.sh`
-
-7. Add sanity checks
-   - Terraform formatting
-   - Terraform validation
-   - Post-apply checks for bucket and service account existence
-
-### Day 2 success criteria
-- GCP demo foundation exists
-- Terraform can create and destroy the core resources
-- Landing bucket is usable for ingestion work
-- Cost controls are documented and enforced
+### Success criteria
+- Job runs a real transfer with zero secrets in code/image/env logs
+- Re-running the transfer is safe (precursor to Day 6 idempotency)
+- Cloud Build produces a deployable image without local Docker
 
 ---
 
-## Day 3 Plan: RClone Ingestion Layer
+## Day 6 Plan: Scheduling + Idempotency + Alerting
 
 ### Objective
-Build the ingestion mechanism that can move or sync data into GCS in a reproducible, containerized way.
+Turn the job into an orchestrated pipeline: scheduled, idempotent, observable.
 
 ### Tasks
-1. Choose a small, low-cost dataset/source
-   - Prefer a synthetic or public dataset
-   - Keep transfer size small for testing
+1. **Cloud Scheduler** → triggers `rclone-ingestion-dev` on a cron
+   (replaces manual `gcloud run jobs execute`)
+2. **Idempotency**: manifest/state object in GCS recording completed transfers;
+   re-runs skip already-ingested files (no duplicates)
+3. **Alerting**: log-based metric on execution failure → notification (email)
+4. Structured transfer logs (JSON lines: source, dest, bytes, duration, status)
 
-2. Build the RClone container
-   - Create a Dockerfile
-   - Package `rclone` in a repeatable runtime
-
-3. Create sync/copy scripts
-   - Support dry-run mode
-   - Parameterize source and destination
-   - Log clearly and fail safely
-
-4. Add sanity checks / tests
-   - Container builds successfully
-   - Dry-run works
-   - Sync script behaves as expected
-   - Optional one-time live transfer to GCS for verification
-
-5. Document the ingestion pattern
-   - Explain why RClone is used
-   - Explain cost and teardown considerations
-   - Explain how it fits into the larger architecture
-
-### Day 3 success criteria
-- RClone container runs successfully
-- Dry-run transfer is verified
-- Small live transfer to GCS is verified
-- Ingestion step is documented and reproducible
+### Success criteria
+- Pipeline runs unattended on schedule
+- Manual re-run after success = no-op (provable via logs + bucket state)
+- A forced failure produces an alert
 
 ---
 
-## Decisions So Far
+## Day 7 Plan: Teardown + README Finale
 
-### Technical choices
-- Infrastructure as Code: Terraform
-- Cloud focus: GCP first
-- Local development: VS Code on macOS
-- Ingestion tooling: RClone
-- Project strategy: low-cost, quick teardown, demo-oriented
+### Tasks
+1. Full `terraform destroy` rehearsal (document the deletion_protection
+   two-pass procedure — dev env keeps protection `false` by design)
+2. Spin-up-from-zero test: fresh clone → bootstrap → apply → transfer runs
+3. Cost table in README (resting cost/day, per-run cost)
+4. README architecture diagram + "What I'd do at production scale" section
+   (remote state, env promotion, VPC-SC, CMEK, Tailscale/SMB as Future Work)
 
-### Architectural goals
-- Reproducible infrastructure
-- Modular Terraform design
-- Clear separation of landing, staging, and downstream processing layers
-- Future support for Airflow, Dataflow, and Dagster benchmarks
-
----
-
-## Constraints
-- Keep cloud costs low
-- Make teardown quick and reliable
-- Use small datasets for testing
-- Prefer local verification before cloud execution
-- Document patterns as they are added
+### Success criteria
+- `destroy` → `apply` round trip works from a clean checkout
+- README tells the whole story without the chat history
 
 ---
+
+## Constraints (unchanged)
+- Keep cloud costs low; teardown quick and reliable
+- Small datasets; prefer local verification before cloud execution
+- Every capability grant documented; every war story written down
 
 ## Open Questions
-- Which GCP project will be used for the demo environment?
-- Should Terraform bootstrap use local state first or a remote GCS backend from the start?
-- What dataset/source should RClone use for the initial demo?
-- Will Day 2 include remote state migration, or should that be deferred until after the landing bucket exists?
-
----
+- Day 5 source choice: public HTTP dataset vs. second GCS bucket as pseudo-external
+- Cloud Scheduler SA: reuse `rclone-runner@` + `run.invoker`, or dedicated scheduler SA? (lean: dedicated)
+- Idempotency manifest format: per-file ledger vs. per-batch marker object
 
 ## Next Update
-Update this file after:
-- GCP project selection
-- Terraform backend decision
-- landing bucket creation
-- RClone container implementation
-- first successful dry-run or live sync
-
-# Cloud Build configuration for RClone ingestion container
-# Usage: gcloud builds submit --config=cloudbuild.yaml ingestion/rclone/
-
-steps:
-  # Build the RClone image
-  - name: 'gcr.io/cloud-builders/docker'
-    args: 
-      - 'build'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/rclone-ingestion:$SHORT_SHA'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/rclone-ingestion:latest'
-      - '.'
-    dir: 'ingestion/rclone'
-
-  # Test the image (dry-run)
-  - name: 'gcr.io/$PROJECT_ID/rclone-ingestion:$SHORT_SHA'
-    args: 
-      - 'rclone'
-      - 'version'
-    env:
-      - 'RCLONE_CONFIG=/config/rclone'
-
-  # Push to Container Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'push'
-      - 'gcr.io/$PROJECT_ID/rclone-ingestion:$SHORT_SHA'
-  
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'push'
-      - 'gcr.io/$PROJECT_ID/rclone-ingestion:latest'
-
-images:
-  - 'gcr.io/$PROJECT_ID/rclone-ingestion:$SHORT_SHA'
-  - 'gcr.io/$PROJECT_ID/rclone-ingestion:latest'
-
-options:
-  logging: CLOUD_LOGGING_ONLY
-
-timeout: 600s
+Update after: Secret Manager mount working, first real transfer, Cloud Build submit green.
