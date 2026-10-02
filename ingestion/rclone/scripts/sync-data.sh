@@ -8,6 +8,11 @@
 # Environment variables:
 #   RCLONE_CONFIG: Path to rclone.conf (optional, uses default if not set)
 
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+  echo "Usage: $0 --source SOURCE --dest DEST [--dry-run] [--quiet] [--log-file FILE]"
+  exit 0
+fi
+
 set -euo pipefail
 
 # Default values
