@@ -7,3 +7,8 @@ output "service_account_email" {
   description = "Execution service account email"
   value       = google_service_account.job_runner.email
 }
+
+output "job_runner_email" {
+  description = "Execution service account for the Cloud Run job"
+  value       = google_service_account.job_runner.email
+}

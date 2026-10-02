@@ -60,3 +60,15 @@ variable "deletion_protection" {
   description = "Prevent accidental deletion of the job. Set true in prod."
   default     = true
 }
+
+variable "secret_name" {
+  type        = string
+  description = "Name of the Secret Manager secret to mount as rclone.conf"
+  default     = null
+}
+
+variable "sa_key_secret_name" {
+  type        = string
+  description = "Name of the Secret Manager secret containing the service account key JSON"
+  default     = null
+}

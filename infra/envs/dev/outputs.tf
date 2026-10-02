@@ -22,3 +22,8 @@ output "artifact_registry_url" {
   description = "Docker image prefix URL for the rclone-ingestion repository"
   value       = module.artifact_registry.repository_url
 }
+
+output "source_bucket_name" {
+  description = "Name of the simulated external source bucket (Day 5)"
+  value       = google_storage_bucket.source.name
+}

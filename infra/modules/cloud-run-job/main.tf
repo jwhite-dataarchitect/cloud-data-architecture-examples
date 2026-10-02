@@ -24,6 +24,52 @@ resource "google_cloud_run_v2_job" "job" {
         image   = var.image
         command = var.command
         args    = var.args
+
+        dynamic "volume_mounts" {
+          for_each = var.secret_name != null ? [1] : []
+          content {
+            name       = "rclone-config"
+            mount_path = "/config/rclone"
+          }
+        }
+
+        dynamic "volume_mounts" {
+          for_each = var.sa_key_secret_name != null ? [1] : []
+          content {
+            name       = "rclone-sa-key"
+            mount_path = "/secrets"
+          }
+        }
+      }
+
+      dynamic "volumes" {
+        for_each = var.secret_name != null ? [1] : []
+        content {
+          name = "rclone-config"
+          secret {
+            secret       = var.secret_name
+            default_mode = 420 # 0644 octal
+            items {
+              version = "latest"
+              path    = "rclone.conf"
+            }
+          }
+        }
+      }
+
+      dynamic "volumes" {
+        for_each = var.sa_key_secret_name != null ? [1] : []
+        content {
+          name = "rclone-sa-key"
+          secret {
+            secret       = var.sa_key_secret_name
+            default_mode = 256 # 0400 octal (read-only for owner)
+            items {
+              version = "latest"
+              path    = "sa-key.json"
+            }
+          }
+        }
       }
     }
   }

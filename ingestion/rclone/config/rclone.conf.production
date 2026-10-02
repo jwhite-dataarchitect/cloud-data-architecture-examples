@@ -1,0 +1,9 @@
+[source]
+type = gcs
+project_number = 197208349631
+service_account_file = /secrets/sa-key.json
+
+[dest]
+type = gcs
+project_number = 197208349631
+service_account_file = /secrets/sa-key.json
