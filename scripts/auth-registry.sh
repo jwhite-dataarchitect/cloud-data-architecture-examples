@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #
-# install-day4.sh — Install and verify Day 4 prerequisites (container tooling).
+# auth-registry.sh — Install and verify container tooling prerequisites.
 #
 # Day 1–3 installed: Terraform, Git, VS Code CLI, gcloud.
 # Day 4 adds:        Docker (local builds), Cloud Build API, Artifact Registry API.
 #
 # Usage:
-#   ./scripts/install-day4.sh [PROJECT_ID_OR_NUMBER]
+#   ./scripts/auth-registry.sh [PROJECT_ID_OR_NUMBER]
 #
 set -euo pipefail
 
