@@ -1,16 +1,34 @@
-FROM rclone/rclone:latest
+# Dockerfile for RClone ingestion container
+# Day 4: security hardening + execution defaults
+#
+# Base image is pinned to an immutable digest (reproducible builds, supply-chain
+# protection). To update: bump the tag, then refresh the digest with
+#   docker buildx imagetools inspect rclone/rclone:<new-tag>
+# and replace the sha256 below.
+
+FROM rclone/rclone:1.75.1@sha256:efa32e6d9f376adb42b34cf35d238887f18839ab61bbec27e598c3ce396a6b7c
 
 # Install bash for better scripting
 RUN apk add --no-cache bash
 
-# Copy our scripts into the container
-COPY scripts/ /scripts/
+# Create non-root user for runtime
+RUN adduser -D -u 1000 rclone-user
 
-# Make scripts executable
+# Copy scripts
+COPY scripts/ /scripts/
 RUN chmod +x /scripts/*.sh
 
-# Set working directory
+# Config template path (Cloud Build mounts real config here)
+ENV RCLONE_CONFIG="/config/rclone.conf"
+
+# Switch to non-root
+USER rclone-user
 WORKDIR /workspace
 
-# Default command shows help
-CMD ["rclone", "--help"]
+# Healthcheck: verify rclone binary works
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD ["rclone", "version"]
+
+# Default entrypoint runs the sync script; override with --entrypoint for rclone commands
+ENTRYPOINT ["/scripts/sync-data.sh"]
+CMD ["--help"]
