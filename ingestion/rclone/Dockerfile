@@ -6,7 +6,7 @@
 #   docker buildx imagetools inspect rclone/rclone:<new-tag>
 # and replace the sha256 below.
 
-FROM rclone/rclone:1.75.1@sha256:efa32e6d9f376adb42b34cf35d238887f18839ab61bbec27e598c3ce396a6b7c
+FROM rclone/rclone:1.75.1@sha256:45401ad7410db1d67ffdb58e19059ad20b0d8e0285a60e38bbec55cc1019c7a5
 
 # Install bash for better scripting
 RUN apk add --no-cache bash
