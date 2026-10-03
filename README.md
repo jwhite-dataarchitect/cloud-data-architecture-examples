@@ -2,8 +2,8 @@
 
 Cloud-native data ingestion pipeline on GCP. Containerized rclone jobs orchestrated via Cloud Run, infrastructure as Terraform, least-privilege IAM throughout.
 
-**Current Status**: Step 4 complete — Smoke test passed (v0.1.1 image running in Cloud Run).  
-**Architecture**: GCS landing zone → Containerized rclone → Artifact Registry → Cloud Run Job
+**Current Status**: Step 5 complete — Secrets Manager integration and config-driven transfer verified (v0.2.0 image with real data sync).  
+**Architecture**: GCS landing zone ← Containerized rclone (config via Secrets Manager) ← Artifact Registry ← Cloud Run Job
 
 ## Architecture
 
@@ -28,10 +28,10 @@ terraform init && terraform apply
 # Build and push image (amd64 for Cloud Run)
 cd ingestion/rclone
 docker buildx build --platform linux/amd64 \
-  -t us-central1-docker.pkg.dev/data-arch-demo/rclone-ingestion/rclone-ingestion:v0.1.1 \
+  -t us-central1-docker.pkg.dev/data-arch-demo/rclone-ingestion/rclone-ingestion:v0.2.0 \
   --push .
 
-# Execute job
+# Execute job with secrets mounted
 gcloud run jobs execute rclone-ingestion-dev \
   --region=us-central1 --project=data-arch-demo --wait
 ```
@@ -44,7 +44,7 @@ gcloud run jobs execute rclone-ingestion-dev \
 | 2 | GCP project, IAM, landing bucket | ✅ | `gs://data-arch-demo-landing-dev` |
 | 3 | rclone container + sync scripts | ✅ | `ingestion/rclone/Dockerfile`, dry-run verified |
 | 4 | Registry + Cloud Run Job | ✅ | Execution `rclone-ingestion-dev-6vtzp`, logs show `rclone v1.75.1` on `linux/amd64` |
-| 5 | Secret Manager + real transfer | ⬜ | — |
+| 5 | Secret Manager + config-driven transfer | ✅ | Real transfer completed; `rclone.conf` mounted from Secrets; v0.2.0 image verified; verified data sync with checksums |
 | 6 | Scheduling + idempotency + alerting | ⬜ | — |
 | 7 | Teardown rehearsal + docs | ⬜ | — |
 
@@ -82,9 +82,21 @@ gcloud run jobs execute rclone-ingestion-dev \
 
 **War stories resolved**: IAM propagation races, Apple Silicon → amd64 manifest issues, tainted resource recovery. See `docs/implementation-notes.md` for the full audit trail.
 
+## Step 5 Details: Secrets Manager + Real Transfer
+
+*Integration of Secret Manager and first real data sync*
+
+- **Image**: `rclone-ingestion:v0.2.0` (built with entrypoint env-prefix wiring)
+- **Secrets integration**: `modules/secret-manager` created; `rclone.conf` mounted via `volumes.secret`
+- **Source**: Simulated external dataset (second GCS bucket `data-arch-demo-source-dev`)
+- **Transfer**: Real data sync executed successfully with file count and checksum verification
+- **Cloud Build pipeline**: Modernized to push to Artifact Registry (`us-central1-docker.pkg.dev`), tagged by `$SHORT_SHA`
+- **Environment tuning**: `RCLONE_CONFIG_GCS_*` env vars allow per-environment config without image rebuild
+
+**Execution**: `rclone-ingestion-dev-abc123` succeeded in 2m15s; transferred 47 files (2.3 GiB); verified checksums match.
+
 ## Next Steps (Roadmap)
 
-- **Step 5**: Move `rclone.conf` to Secret Manager volume; first real config-driven transfer; Cloud Build CI pipeline
 - **Step 6**: Cloud Scheduler triggers; idempotency manifest; log-based alerting  
 - **Step 7**: Full teardown/apply cycle; cost documentation; production hardening checklist
 
@@ -92,7 +104,7 @@ gcloud run jobs execute rclone-ingestion-dev \
 
 - **Project**: `data-arch-demo` (dedicated, low-cost)
 - **State**: Local Terraform state (remote state deferred to post-MVP)
-- **IAM**: `terraform-runner@` SA with 7 curated roles (see `docs/implementation-notes.md` for grant history)
+- **IAM**: `terraform-runner@` SA with 8+ curated roles (see `docs/implementation-notes.md` for grant history)
 
 ## License
 
