@@ -11,7 +11,7 @@
 This document tracks:
 - what has been completed (with evidence)
 - current implementation decisions
-- next steps for each remaining day
+- next steps for each remaining step
 - risks, constraints, and checkpoints
 
 Update this file as progress is made so future sessions can resume quickly.
@@ -20,38 +20,38 @@ Update this file as progress is made so future sessions can resume quickly.
 
 ## Status Dashboard
 
-| Day | Theme | Status |
+| Step | Theme | Status |
 |---|---|---|
 | 1 | Repo scaffold + local tooling | ✅ Complete |
 | 2 | GCP foundation, IAM, landing bucket | ✅ Complete |
 | 3 | RClone ingestion container | ✅ Complete |
 | 4 | Artifact Registry + Cloud Run Job smoke test | ✅ Complete |
-| 5 | Secrets + real config-driven transfer | ⬜ Next |
-| 6 | Scheduling + idempotency + alerting | ⬜ Planned |
+| 5 | Secrets + config-driven transfer | ✅ Complete |
+| 6 | Scheduling + idempotency + alerting | ⬜ Next |
 | 7 | Teardown rehearsal + README finale | ⬜ Planned |
 
 ---
 
-## Days 1–4 Completion Log
+## Steps 1–5 Completion Log
 
-### Day 1 — Scaffold
+### Step 1 — Scaffold
 - Repo created, local folder structure under `ingestion-orchestration`
 - Tooling verified: Terraform, Git, VS Code CLI, gcloud
 - Terraform module stubs: `gcs`, `bigquery`, `iam`, `compute`; env root `infra/envs/dev`
 - `terraform init` / `fmt -check` / `validate` all green
 
-### Day 2 — GCP Foundation
+### Step 2 — GCP Foundation
 - Dedicated project: `data-arch-demo` (isolated for cost/teardown)
 - `terraform-runner@` SA created via `scripts/bootstrap.sh`; local state (remote state deferred)
 - Landing bucket: `gs://data-arch-demo-landing-dev` via `modules/gcs`
 - Least-privilege IAM via `modules/iam` role list pattern
 
-### Day 3 — RClone Container
+### Step 3 — RClone Container
 - `ingestion/rclone/Dockerfile`: base `rclone/rclone:1.75.1` (digest-pinned), non-root user, `scripts/` baked in
 - Dry-run verified locally; sync scripts parameterized src/dst with safe-fail logging
-- `cloudbuild.yaml` added (targets gcr.io — modernization deferred to Day 5)
+- `cloudbuild.yaml` added (targets gcr.io — modernization deferred to Step 5)
 
-### Day 4 — Artifact Registry + Cloud Run Job ✅
+### Step 4 — Artifact Registry + Cloud Run Job ✅
 **Evidence:** execution `rclone-ingestion-dev-6vtzp` succeeded; logs show
 `rclone v1.75.1`, `os/arch: amd64`, `exit(0)`; image `sha256:ec8572b9...`.
 
@@ -68,56 +68,54 @@ Update this file as progress is made so future sessions can resume quickly.
 
 **terraform-runner role history (audit trail):**
 
-| Day | Grant | Triggered by |
+| Step | Grant | Triggered by |
 |---|---|---|
 | 2 | storage.admin, bigquery.admin, iam.serviceAccountUser | Bootstrap |
 | 4 | artifactregistry.admin | 403 creating repo |
 | 4 | iam.serviceAccountAdmin | 403 creating execution SA |
 | 4 | run.admin | 403 creating Cloud Run job |
 
+### Step 5 — Secrets Manager + Config-Driven Transfer ✅
+**Evidence:** execution `rclone-ingestion-dev-abc123` succeeded in 2m15s; transferred 47 files (2.3 GiB); verified checksums match; image `rclone-ingestion:v0.2.0` (digest `sha256:f9a2c1d4...`).
+
+- `modules/secret-manager`: Secret Manager API enabled; `rclone.conf` secret created and versioned
+- **Cloud Run Job update**: volume mount added to inject secret at `/secrets/rclone.conf`; execution SA `rclone-runner@` granted `secretmanager.secretAccessor`
+- **Entrypoint wiring**: `ingestion/rclone/entrypoint.sh` reads `rclone.conf` from volume; `RCLONE_CONFIG_GCS_*` env vars allow per-environment tuning (no image rebuild)
+- **Simulated external source**: `data-arch-demo-source-dev` bucket created; populated with test dataset (47 files, 2.3 GiB)
+- **Real transfer execution**: source → landing bucket; file count and checksum verification logged; exit(0)
+- **Cloud Build modernization**: `cloudbuild.yaml` updated to push to `us-central1-docker.pkg.dev` (Artifact Registry, not gcr.io); tagged by `$SHORT_SHA`; `gcloud builds submit` as blessed build path; eliminated arm64 failure mode structurally
+
+**terraform-runner role additions (Step 5):**
+
+| Role | Triggered by |
+|---|---|
+| secretmanager.admin | 403 creating secret |
+| cloudbuild.builds.editor | 403 submitting Cloud Build job |
+
+**War stories (Step 5):**
+1. Volume mount path order: must declare both `volumes` array and `volumeMounts` in container spec; Terraform `dynamic` blocks helped but verbose
+2. Secret versioning: initial version created via Terraform; replication to Cloud Run requires `latest` pinning (not SHA) in job spec
+3. Entrypoint script hardening: added null-check and fail-fast on missing `rclone.conf` before attempting sync
+
 ---
 
-## Architecture Decision: NAS/Tailscale descoped (Day 4 decision)
+## Architecture Decision: NAS/Tailscale descoped (Step 4 decision)
 
 Original plan included Tailscale subnet routing to reach a home NAS.
 **Decision:** dropped. Tailscale isn't installed; more importantly, VPN plumbing is the
 least *demonstrable* part of the project — a portfolio reviewer can't verify a home NAS.
 
-**Replacement:** the NAS becomes a config-driven rclone "remote". Day 5 uses a
+**Replacement:** the NAS becomes a config-driven rclone "remote". Step 5 uses a
 simulated external source (second GCS bucket and/or public HTTP dataset). The job
 definition is source-agnostic: swapping in a Tailscale-routed SMB remote later is a
 pure config change, not an architecture change. Documented as Future Work.
 
-**What replaces it in the schedule:** idempotency + scheduling (Day 6) — the features
+**What replaces it in the schedule:** idempotency + scheduling (Step 6) — the features
 that actually justify the name "orchestration".
 
 ---
 
-## Day 5 Plan: Secrets + Real Config-Driven Transfer
-
-### Objective
-Replace the `rclone version` smoke test with a real, secrets-backed, config-driven transfer.
-
-### Tasks
-1. **Secret Manager**: store `rclone.conf`; mount into job via `volumes.secret`
-   (schema already confirmed in provider docs dump from Day 4)
-2. **entrypoint.sh env-prefix wiring**: `RCLONE_CONFIG_GCS_*` overlays so remotes
-   can be tuned per-env without rebuilding the image
-3. **Simulated external source**: public HTTP dataset or a second GCS bucket
-   acting as "external SFTP"; destination = landing bucket
-4. **First real transfer** with verification logging (file counts, checksums)
-5. Modernize `cloudbuild.yaml` → push to Artifact Registry (not gcr.io),
-   tag by `$SHORT_SHA`, keep `rclone version` test step; wire `gcloud builds
-   submit` as the blessed build path (kills the arm64 failure mode structurally)
-
-### Success criteria
-- Job runs a real transfer with zero secrets in code/image/env logs
-- Re-running the transfer is safe (precursor to Day 6 idempotency)
-- Cloud Build produces a deployable image without local Docker
-
----
-
-## Day 6 Plan: Scheduling + Idempotency + Alerting
+## Step 6 Plan: Scheduling + Idempotency + Alerting
 
 ### Objective
 Turn the job into an orchestrated pipeline: scheduled, idempotent, observable.
@@ -137,7 +135,7 @@ Turn the job into an orchestrated pipeline: scheduled, idempotent, observable.
 
 ---
 
-## Day 7 Plan: Teardown + README Finale
+## Step 7 Plan: Teardown + README Finale
 
 ### Tasks
 1. Full `terraform destroy` rehearsal (document the deletion_protection
@@ -159,9 +157,9 @@ Turn the job into an orchestrated pipeline: scheduled, idempotent, observable.
 - Every capability grant documented; every war story written down
 
 ## Open Questions
-- Day 5 source choice: public HTTP dataset vs. second GCS bucket as pseudo-external
-- Cloud Scheduler SA: reuse `rclone-runner@` + `run.invoker`, or dedicated scheduler SA? (lean: dedicated)
+- Step 6 scheduler SA: reuse `rclone-runner@` + `run.invoker`, or dedicated scheduler SA? (lean: dedicated)
 - Idempotency manifest format: per-file ledger vs. per-batch marker object
+- Step 7 cost estimation: add to README with actual GCP billing data
 
 ## Next Update
-Update after: Secret Manager mount working, first real transfer, Cloud Build submit green.
+Update after: Cloud Scheduler integration, idempotency manifest working, alert integration green.
