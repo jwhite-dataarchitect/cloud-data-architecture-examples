@@ -2,7 +2,7 @@
 
 Cloud-native data ingestion pipeline on GCP. Containerized rclone jobs orchestrated via Cloud Run, infrastructure as Terraform, least-privilege IAM throughout.
 
-**Current Status**: Day 4 complete — Smoke test passed (v0.1.1 image running in Cloud Run).  
+**Current Status**: Step 4 complete — Smoke test passed (v0.1.1 image running in Cloud Run).  
 **Architecture**: GCS landing zone → Containerized rclone → Artifact Registry → Cloud Run Job
 
 ## Architecture
@@ -13,9 +13,9 @@ graph LR
     C[Simulated Source<br/>GCS/HTTP] --> B
     B -->|Checksums| D[GCS Landing Bucket<br/>data-arch-demo-landing-dev]
     B -.->|Image Pull| E[Artifact Registry<br/>rclone-ingestion]
-    F[Cloud Scheduler<br/>Day 6] -->|Triggers| G[Cloud Run Job<br/>rclone-ingestion-dev]
+    F[Cloud Scheduler<br/>Step 6] -->|Triggers| G[Cloud Run Job<br/>rclone-ingestion-dev]
     G --> B
-    H[Secret Manager<br/>Day 5] -.->|rclone.conf| B
+    H[Secret Manager<br/>Step 5] -.->|rclone.conf| B
 ```
 
 ## Quick Start
@@ -38,7 +38,7 @@ gcloud run jobs execute rclone-ingestion-dev \
 
 ## Implementation Status
 
-| Day | Deliverable | Status | Evidence |
+| Step | Deliverable | Status | Evidence |
 |---|---|---|---|
 | 1 | Terraform scaffold + local tooling | ✅ | `terraform validate` green |
 | 2 | GCP project, IAM, landing bucket | ✅ | `gs://data-arch-demo-landing-dev` |
@@ -48,7 +48,7 @@ gcloud run jobs execute rclone-ingestion-dev \
 | 6 | Scheduling + idempotency + alerting | ⬜ | — |
 | 7 | Teardown rehearsal + docs | ⬜ | — |
 
-## Day 3 Details: RClone Configuration
+## Step 3 Details: RClone Configuration
 
 *Operational specifics for the ingestion layer*
 
@@ -71,7 +71,7 @@ gcloud run jobs execute rclone-ingestion-dev \
 
 **Cost controls:** Always `--dry-run` first; use `--bwlimit` for large files; monitor with `gcloud storage du -s gs://data-arch-demo-landing-dev`.
 
-## Day 4 Details: Smoke Test Evidence
+## Step 4 Details: Smoke Test Evidence
 
 *Verification that the pipeline executes*
 
@@ -84,9 +84,9 @@ gcloud run jobs execute rclone-ingestion-dev \
 
 ## Next Steps (Roadmap)
 
-- **Day 5**: Move `rclone.conf` to Secret Manager volume; first real config-driven transfer; Cloud Build CI pipeline
-- **Day 6**: Cloud Scheduler triggers; idempotency manifest; log-based alerting  
-- **Day 7**: Full teardown/apply cycle; cost documentation; production hardening checklist
+- **Step 5**: Move `rclone.conf` to Secret Manager volume; first real config-driven transfer; Cloud Build CI pipeline
+- **Step 6**: Cloud Scheduler triggers; idempotency manifest; log-based alerting  
+- **Step 7**: Full teardown/apply cycle; cost documentation; production hardening checklist
 
 ## Infrastructure
 
