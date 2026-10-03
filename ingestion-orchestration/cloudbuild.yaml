@@ -1,0 +1,45 @@
+# Cloud Build configuration for RClone ingestion container
+# Step 4: Artifact Registry (replaces deprecated gcr.io)
+# Usage: gcloud builds submit --config=cloudbuild.yaml .
+
+steps:
+  # Build the RClone image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/rclone-ingestion:$SHORT_SHA'
+      - '-t'
+      - '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/rclone-ingestion:latest'
+      - '.'
+    dir: 'ingestion/rclone'
+
+  # Smoke-test the image (binary verification only; no cloud calls)
+  - name: '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/rclone-ingestion:$SHORT_SHA'
+    args: ['version']
+    entrypoint: 'rclone'
+
+  # Push commit-tagged image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/rclone-ingestion:$SHORT_SHA'
+
+  # Push latest tag
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/rclone-ingestion:latest'
+
+images:
+  - '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/rclone-ingestion:$SHORT_SHA'
+  - '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/rclone-ingestion:latest'
+
+substitutions:
+  _LOCATION: us-central1
+  _REPOSITORY: rclone-ingestion
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 600s
