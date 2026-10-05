@@ -1,0 +1,16 @@
+.DS_Store
+.private/
+.env
+.env.*
+credentials/
+secrets/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfplan
+.terraform/
+*.pem
+*.key
+*.log
+.vscode/
+.idea/
