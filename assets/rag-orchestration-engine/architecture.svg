@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="590" viewBox="0 0 1120 590" role="img" aria-labelledby="title desc">
+  <title id="title">RAG orchestration engine architecture</title>
+  <desc id="desc">Document ingestion writes chunks and embeddings to PostgreSQL. Queries are embedded, retrieved using vector and full-text search, fused, answered by Gemini, and independently checked by a Gemini grounding review. A separate panel shows persistent and disposable cloud infrastructure and isolated integration tests.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#526579"/>
+    </marker>
+    <style>
+      text { font-family: Arial, sans-serif; fill: #172b4d; }
+      .title { font-size: 25px; font-weight: 700; }
+      .heading { font-size: 17px; font-weight: 700; }
+      .label { font-size: 14px; }
+      .small { font-size: 12px; fill: #425466; }
+      .box { fill: #f2f6fc; stroke: #5276a7; stroke-width: 1.5; rx: 10; }
+      .external { fill: #fff7e6; stroke: #c58b19; stroke-width: 1.5; rx: 10; }
+      .database { fill: #e9f7f0; stroke: #39835b; stroke-width: 1.5; rx: 10; }
+      .boundary { fill: #fbfcfe; stroke: #9aa9ba; stroke-width: 1.5; stroke-dasharray: 7 5; rx: 14; }
+      .arrow { fill: none; stroke: #526579; stroke-width: 2; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="1120" height="590" fill="#ffffff"/>
+  <text x="38" y="42" class="title">RAG orchestration engine</text>
+
+  <rect x="35" y="65" width="1050" height="310" class="boundary"/>
+  <text x="55" y="94" class="heading">Application and data plane</text>
+
+  <rect x="60" y="128" width="145" height="62" class="external"/>
+  <text x="132" y="153" text-anchor="middle" class="label">Source</text>
+  <text x="132" y="173" text-anchor="middle" class="small">documents</text>
+
+  <rect x="245" y="128" width="170" height="62" class="box"/>
+  <text x="330" y="153" text-anchor="middle" class="label">Split + embed</text>
+  <text x="330" y="173" text-anchor="middle" class="small">OpenAI embeddings</text>
+  <path d="M205 159 H239" class="arrow"/>
+
+  <rect x="465" y="128" width="190" height="62" class="database"/>
+  <text x="560" y="153" text-anchor="middle" class="label">PostgreSQL + pgvector</text>
+  <text x="560" y="173" text-anchor="middle" class="small">chunks, vectors, full text</text>
+  <path d="M415 159 H459" class="arrow"/>
+
+  <rect x="60" y="250" width="145" height="62" class="external"/>
+  <text x="132" y="275" text-anchor="middle" class="label">Query client</text>
+  <text x="132" y="295" text-anchor="middle" class="small">FastAPI request</text>
+
+  <rect x="245" y="250" width="170" height="62" class="box"/>
+  <text x="330" y="275" text-anchor="middle" class="label">Query embedding</text>
+  <text x="330" y="295" text-anchor="middle" class="small">OpenAI</text>
+  <path d="M205 281 H239" class="arrow"/>
+
+  <rect x="465" y="235" width="190" height="92" class="database"/>
+  <text x="560" y="264" text-anchor="middle" class="label">Hybrid retrieval</text>
+  <text x="560" y="285" text-anchor="middle" class="small">vector + full-text</text>
+  <text x="560" y="304" text-anchor="middle" class="small">RRF de-duplication</text>
+  <path d="M415 281 H459" class="arrow"/>
+  <path d="M560 190 V229" class="arrow"/>
+
+  <rect x="715" y="250" width="150" height="62" class="box"/>
+  <text x="790" y="275" text-anchor="middle" class="label">Synthesis</text>
+  <text x="790" y="295" text-anchor="middle" class="small">Gemini + citations</text>
+  <path d="M655 281 H709" class="arrow"/>
+
+  <rect x="915" y="250" width="145" height="62" class="external"/>
+  <text x="987" y="275" text-anchor="middle" class="label">Grounding review</text>
+  <text x="987" y="295" text-anchor="middle" class="small">Gemini; withhold if unsupported</text>
+  <path d="M865 281 H909" class="arrow"/>
+
+  <rect x="35" y="400" width="680" height="155" class="boundary"/>
+  <text x="55" y="429" class="heading">Cloud lifecycle boundaries</text>
+  <rect x="65" y="452" width="280" height="75" class="database"/>
+  <text x="205" y="480" text-anchor="middle" class="label">Persistent assets</text>
+  <text x="205" y="501" text-anchor="middle" class="small">source storage · image registry · secret containers</text>
+  <rect x="395" y="452" width="285" height="75" class="box"/>
+  <text x="537" y="480" text-anchor="middle" class="label">Disposable runtime</text>
+  <text x="537" y="501" text-anchor="middle" class="small">IAP-restricted API VM · private Cloud SQL</text>
+
+  <rect x="745" y="400" width="340" height="155" class="boundary"/>
+  <text x="765" y="429" class="heading">Automated integration tests</text>
+  <text x="915" y="468" text-anchor="middle" class="label">Isolated PostgreSQL + pgvector</text>
+  <text x="915" y="491" text-anchor="middle" class="small">real DB/retrieval · deterministic embeddings</text>
+  <text x="915" y="511" text-anchor="middle" class="small">mock Gemini · no cloud credentials</text>
+</svg>
