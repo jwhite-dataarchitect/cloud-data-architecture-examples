@@ -1,7 +1,9 @@
 # RAG orchestration engine
 
-**Status:** E2E query validated in an isolated cloud demonstration; final
-disposable-network teardown verification is pending.
+**Status as of October 12, 2026:** E2E query validated in an isolated cloud
+demonstration; Step 8 code is committed/pushed and CI passed; case study and
+diagram are published. Final disposable-network teardown and cloud drift
+validation remain open.
 
 ## The problem
 
@@ -44,6 +46,8 @@ independently.
   grounding with a supported verdict.
 - Offline unit tests and Docker-backed PostgreSQL integration tests passed;
   the integration flow uses deterministic embeddings and mocked Gemini calls.
+- The October 12 GitHub Actions run for implementation commit `f2c31eb` passed
+  36 unit and 3 integration tests. CI execution is verified, not merely configured.
 - The approved teardown removed the VM and Cloud SQL instance. Google Cloud
   delayed deletion of the private-service networking connection, so final
   disposable Terraform-state cleanup remains pending.
@@ -56,6 +60,11 @@ truth. The router remains a placeholder, ingestion orchestration is incomplete,
 and the integration suite does not test a separately deployed API container or
 live provider calls.
 
+The current splitter uses 512-character chunks and 64-character overlap by
+default, not token-based limits or quality-tuned thresholds. Sample seeding
+loads prewritten passages rather than exercising that splitter. Content-hash
+upserts prevent duplicate rows; an embedding cache is not implemented.
+
 The API VM had IAP-only inbound access but an external IP for outbound package
 and model access. This is not a private-only network or an application-auth
 design. Persistent cloud assets may continue to incur cost; the budget is
@@ -65,6 +74,10 @@ offline.
 Implementation is maintained privately. This repository contains architecture
 and validation evidence only; it omits project identifiers, endpoints,
 credentials, Terraform state, plans, and operator-specific configuration.
+
+See [the remaining decisions and closeout checklist](decisions.md#remaining-decisions-and-work)
+for unresolved items; publication does not close those implementation or
+validation gaps.
 
 Continue to [architecture](architecture.md), [decisions](decisions.md), and
 [validation](validation.md), or return to the [portfolio](../../README.md).

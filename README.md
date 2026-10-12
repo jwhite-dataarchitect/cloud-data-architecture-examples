@@ -12,7 +12,7 @@ and operational recovery.
 | Project | Problem and contribution | Technologies | Status |
 |---|---|---|---|
 | [Serverless ingestion orchestration](projects/ingestion-orchestration/README.md) | Designed and validated a scheduled transfer workflow with keyless execution, failure notifications, and operator-driven infrastructure drift repair | GCP, Terraform, rclone, containers | E2E-validated demonstration |
-| [RAG orchestration engine](projects/rag-orchestration-engine/README.md) | Designed a hybrid retrieval and grounded-answer workflow with disposable cloud runtime, repeatable integration tests, and explicit validation boundaries | Python, LangGraph, PostgreSQL, pgvector, Gemini, OpenAI, GCP, Terraform | E2E query validated; delayed teardown verification pending |
+| [RAG orchestration engine](projects/rag-orchestration-engine/README.md) | Designed a hybrid retrieval and grounded-answer workflow with disposable cloud runtime, repeatable integration tests, and explicit validation boundaries | Python, LangGraph, PostgreSQL, pgvector, Gemini, OpenAI, GCP, Terraform | E2E query and CI verified; case study published; cloud closeout pending |
 
 **Next:** a Python/Dagster ETL project that builds on reusable ingestion patterns.
 This is planned work, not an implemented or validated capability.
@@ -28,7 +28,7 @@ This is planned work, not an implemented or validated capability.
   repair out-of-band changes.
 - **Evidence:** distinguish measured demonstration results from production claims.
 
-## Explore the case study
+## Explore the case studies
 
 - [RAG project overview](projects/rag-orchestration-engine/README.md)
 - [RAG architecture](projects/rag-orchestration-engine/architecture.md)

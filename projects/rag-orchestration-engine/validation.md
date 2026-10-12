@@ -7,8 +7,10 @@ provider-backed end-to-end query; partial cloud teardown.
 
 | Check | Verified outcome |
 |---|---|
-| Offline unit suite | `make test` passed 36 unit tests in the recorded Phase 7 check |
-| Integration suite | `make integration-test` passed 3 tests against an isolated PostgreSQL/pgvector service |
+| Offline unit suite | `make test` passed 36 unit tests locally and in the October 12 CI run |
+| Integration suite | `make integration-test` passed 3 tests against an isolated PostgreSQL/pgvector service locally and in the October 12 CI run |
+| Step 8 delivery and CI | Implementation commit `f2c31eb` is pushed to `main`; GitHub Actions run `38263718340` succeeded on October 12, including both test targets |
+| Publication | The case study, decisions, validation record, and architecture diagram were merged to portfolio `main` through [PR 1](https://github.com/jwhite-dataarchitect/cloud-data-architecture-examples/pull/1) on October 12 |
 | Ingest-to-query integration | Real splitter, embedding adapter with deterministic vectors, PostgreSQL upsert, hybrid retrieval, LangGraph, and FastAPI request path completed with mocked Gemini calls |
 | Database fault mapping | Simulated database failure returned an API error, not a success-shaped result |
 | Gemini fault mapping | Simulated Gemini unavailability returned HTTP 503 |
@@ -18,7 +20,7 @@ provider-backed end-to-end query; partial cloud teardown.
 | Live query | One non-sensitive `POST /v1/query` completed retrieval, synthesis, and grounding with a supported verdict |
 | Terraform plans | Persistent and disposable plans reported no changes before teardown |
 | VM and database teardown | The approved guarded teardown removed the VM and Cloud SQL instance/database; cost audit found no VM or SQL instance |
-| Final disposable teardown | **Pending.** Terraform still contains the dev VPC, reserved range, Private Service Access connection, and API service registrations while Cloud SQL producer resources age out |
+| Final disposable teardown | **Pending.** The last audited Terraform state contained the dev VPC, reserved range, Private Service Access connection, and API service registrations while Cloud SQL producer resources age out; no new cloud audit was performed for this documentation update |
 | Cloud drift repair | **Not performed.** No disposable runtime is currently running; local application fault tests are not cloud drift tests |
 
 ## Deferred teardown verification
@@ -49,4 +51,7 @@ yet.
 
 Raw logs, Terraform state and plans, account identifiers, private endpoints,
 credentials, and local operator configuration are intentionally excluded.
-See [architecture](architecture.md) and [decisions](decisions.md).
+Existing local and CI results were reviewed for this documentation update;
+no tests were rerun and no cloud resources were created or destroyed.
+See [architecture](architecture.md) and
+[the remaining decisions and work](decisions.md#remaining-decisions-and-work).
