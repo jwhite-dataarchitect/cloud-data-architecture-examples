@@ -1,6 +1,6 @@
 # Validation evidence
 
-**Evidence status:** October 12, 2026
+**Evidence status:** October 14, 2026
 
 **Scope:** local unit and integration tests; one deployed cloud runtime and one
 provider-backed end-to-end query; partial cloud teardown.
@@ -10,6 +10,7 @@ provider-backed end-to-end query; partial cloud teardown.
 | Offline unit suite | `make test` passed 36 unit tests locally and in the October 12 CI run |
 | Integration suite | `make integration-test` passed 3 tests against an isolated PostgreSQL/pgvector service locally and in the October 12 CI run |
 | Step 8 delivery and CI | Implementation commit `f2c31eb` is pushed to `main`; GitHub Actions run `38263718340` succeeded on October 12, including both test targets |
+| Rehydration-only recovery and CI | Decision 12 is implemented in commit `9ff66d2`; GitHub Actions run `38590062294` passed `make test` and `make integration-test` |
 | Publication | The case study, decisions, validation record, and architecture diagram were merged to portfolio `main` through [PR 1](https://github.com/jwhite-dataarchitect/cloud-data-architecture-examples/pull/1) on October 12 |
 | Ingest-to-query integration | Real splitter, embedding adapter with deterministic vectors, PostgreSQL upsert, hybrid retrieval, LangGraph, and FastAPI request path completed with mocked Gemini calls |
 | Database fault mapping | Simulated database failure returned an API error, not a success-shaped result |
@@ -26,13 +27,13 @@ provider-backed end-to-end query; partial cloud teardown.
 ## Deferred teardown verification
 
 The Cloud SQL deletion was recorded at 2026-10-10 03:00 UTC. Google Cloud
-documents that producer resources can take up to four days to clear. Do not
-force-delete the Private Service Access connection. Retry the guarded dev
-teardown no earlier than 2026-10-14 03:00 UTC, review a fresh plan, then run the
-cost sweep. Confirm the disposable Terraform state is empty, no dev VM or SQL
-instance remains, and persistent resources are still present. Update this
-record with the observed results; the checks are not represented as complete
-yet.
+documents that producer resources can take up to four days to clear. The
+earliest retry time has passed, but this documentation update did not run a
+cloud audit. Do not force-delete the Private Service Access connection. Review
+a fresh plan before retrying guarded teardown, then run the cost sweep. Confirm
+the disposable Terraform state is empty, no dev VM or SQL instance remains,
+and persistent resources are still present. Update this record with the
+observed results; the checks are not represented as complete yet.
 
 ## What the results do not establish
 
