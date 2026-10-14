@@ -58,10 +58,17 @@ independently.
   Manager entries remain.
 - Google API services remain enabled by configuration; teardown removed their
   disposable Terraform registration resources without disabling the APIs.
-- The cost sweep returned a historical Asset Inventory entry for a dev bucket
-  last updated October 1. Direct bucket lookup returned 404 and the current
-  bucket listing had no match, so the entry appears stale; no untracked bucket
-  was deleted.
+- The final cost follow-up found a stale Asset Inventory bucket entry last
+  updated October 1; direct lookup and the current bucket list found no matching
+  bucket. A separate unmanaged bucket contains one 49-byte test object and was
+  preserved because ownership is unclear.
+- Three obsolete Artifact Registry tags were removed and immutable-tag
+  protection was restored. The final tagged image remains; eight untagged
+  manifests remain in the 386.689 MB repository after cleanup encountered a
+  manifest dependency and an operation-level permission error.
+- Active Secret Manager versions were left enabled at the user's direction;
+  no secret values were read. Persistent cloud resources and notification-only
+  budgets may continue to incur charges; no itemized billing report was queried.
 
 ## Scope and access
 
