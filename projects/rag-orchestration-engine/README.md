@@ -1,9 +1,10 @@
 # RAG orchestration engine
 
-**Status as of October 12, 2026:** E2E query validated in an isolated cloud
-demonstration; Step 8 code is committed/pushed and CI passed; case study and
-diagram are published. Final disposable-network teardown and cloud drift
-validation remain open.
+**Status as of October 14, 2026:** E2E query validated in an isolated cloud
+demonstration; incremental ingestion and rehydration-only recovery are
+implemented, and CI passed on the recovery change. The case study and diagram
+are published. Final disposable-network teardown and cloud drift validation
+remain open.
 
 ## The problem
 
@@ -47,7 +48,8 @@ independently.
 - Offline unit tests and Docker-backed PostgreSQL integration tests passed;
   the integration flow uses deterministic embeddings and mocked Gemini calls.
 - The October 12 GitHub Actions run for implementation commit `f2c31eb` passed
-  36 unit and 3 integration tests. CI execution is verified, not merely configured.
+  36 unit and 3 integration tests. The October 14 GitHub Actions run for recovery
+  commit `9ff66d2` also passed both test targets.
 - The approved teardown removed the VM and Cloud SQL instance. Google Cloud
   delayed deletion of the private-service networking connection, so final
   disposable Terraform-state cleanup remains pending.
@@ -56,7 +58,7 @@ independently.
 
 This is a demonstration, not a production service, benchmark, or guarantee of
 answer correctness. Grounding is model-based review, not independent proof of
-truth. The router remains a placeholder, ingestion orchestration is incomplete,
+truth. The router remains a placeholder, ingestion has no automatic schedule,
 and the integration suite does not test a separately deployed API container or
 live provider calls.
 
@@ -64,6 +66,21 @@ The current splitter uses 512-character chunks and 64-character overlap by
 default, not token-based limits or quality-tuned thresholds. Sample seeding
 loads prewritten passages rather than exercising that splitter. Content-hash
 upserts prevent duplicate rows; an embedding cache is not implemented.
+
+Cloud demo ingress is restricted to IAP, but the API has no application-level
+authentication or authorization; local development is also unauthenticated.
+Use only non-sensitive demo data. Queries are sent to OpenAI for embeddings,
+and queries plus retrieved document text are sent to Google Gemini for
+synthesis and grounding. The application does not detect or redact PII.
+Application authentication, authorization, and privacy controls are required
+before broader or production use.
+
+Decision 12 uses `make recover` to rebuild indexed documents from the current
+GCS source objects after database recreation and migrations. This is not a
+database snapshot: overwritten or deleted source objects cannot be recovered,
+and unrelated database state is not restored. Recovery requires GCS read
+access and OpenAI embeddings; GCS behavior is tested with mocks, not against a
+live bucket.
 
 The API VM had IAP-only inbound access but an external IP for outbound package
 and model access. This is not a private-only network or an application-auth
