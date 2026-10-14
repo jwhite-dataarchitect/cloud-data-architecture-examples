@@ -1,9 +1,9 @@
 # RAG orchestration engine
 
-**Status as of October 12, 2026:** E2E query validated in an isolated cloud
-demonstration; Step 8 code is committed/pushed and CI passed; case study and
-diagram are published. Final disposable-network teardown and cloud drift
-validation remain open.
+**Status as of October 14, 2026:** E2E query validated in an isolated cloud
+demonstration; Step 8 code is committed/pushed and CI passed; Decisions 11-14
+are resolved for the demo scope. The final disposable teardown is verified;
+cloud drift validation remains open.
 
 ## The problem
 
@@ -48,17 +48,28 @@ independently.
   the integration flow uses deterministic embeddings and mocked Gemini calls.
 - The October 12 GitHub Actions run for implementation commit `f2c31eb` passed
   36 unit and 3 integration tests. CI execution is verified, not merely configured.
-- The approved teardown removed the VM and Cloud SQL instance. Google Cloud
-  delayed deletion of the private-service networking connection, so final
-  disposable Terraform-state cleanup remains pending.
+- The Decision 13 implementation adds a conservative 6,149-token per-request
+  ceiling and a persistent GCS-backed $25 UTC-month ledger for application-
+  managed provider calls. The ledger bucket and runtime IAM are configured but
+  have not been applied.
+- The approved guarded teardown removed the remaining 11 disposable Terraform
+  resources on October 14. The disposable state is empty, and Compute and Cloud
+  SQL lists are empty. Persistent source storage, Artifact Registry, and Secret
+  Manager entries remain.
+- Google API services remain enabled by configuration; teardown removed their
+  disposable Terraform registration resources without disabling the APIs.
+- The cost sweep returned a historical Asset Inventory entry for a dev bucket
+  last updated October 1. Direct bucket lookup returned 404 and the current
+  bucket listing had no match, so the entry appears stale; no untracked bucket
+  was deleted.
 
 ## Scope and access
 
 This is a demonstration, not a production service, benchmark, or guarantee of
 answer correctness. Grounding is model-based review, not independent proof of
-truth. The router remains a placeholder, ingestion orchestration is incomplete,
-and the integration suite does not test a separately deployed API container or
-live provider calls.
+truth. The router remains a placeholder, Dagster partitioning and live GCS
+verification are incomplete, and the integration suite does not test a
+separately deployed API container or live provider calls.
 
 The current splitter uses 512-character chunks and 64-character overlap by
 default, not token-based limits or quality-tuned thresholds. Sample seeding
@@ -66,10 +77,12 @@ loads prewritten passages rather than exercising that splitter. Content-hash
 upserts prevent duplicate rows; an embedding cache is not implemented.
 
 The API VM had IAP-only inbound access but an external IP for outbound package
-and model access. This is not a private-only network or an application-auth
-design. Persistent cloud assets may continue to incur cost; the budget is
-notification-only, not a spending cap. The disposable runtime is currently
-offline.
+and model access. Decision 11 defers application authentication and PII
+controls until a later refactor; use only non-sensitive data and do not treat
+this demo as suitable for broader deployment. Persistent cloud assets may
+continue to incur cost; the cloud billing budget is notification-only. The
+separate application provider ledger is an estimate, not a provider billing
+record, and is not applied in the cloud. The disposable runtime is offline.
 
 Implementation is maintained privately. This repository contains architecture
 and validation evidence only; it omits project identifiers, endpoints,

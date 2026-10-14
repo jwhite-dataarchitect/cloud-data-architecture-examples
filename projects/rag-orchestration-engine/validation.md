@@ -1,14 +1,15 @@
 # Validation evidence
 
-**Evidence status:** October 12, 2026
+**Evidence status:** October 14, 2026
 
 **Scope:** local unit and integration tests; one deployed cloud runtime and one
-provider-backed end-to-end query; partial cloud teardown.
+provider-backed end-to-end query; final guarded teardown of disposable
+resources.
 
 | Check | Verified outcome |
 |---|---|
-| Offline unit suite | `make test` passed 36 unit tests locally and in the October 12 CI run |
-| Integration suite | `make integration-test` passed 3 tests against an isolated PostgreSQL/pgvector service locally and in the October 12 CI run |
+| Offline unit suite | `make test` passed 55 unit tests locally and in CI |
+| Integration suite | `make integration-test` passed 5 tests against an isolated PostgreSQL/pgvector service locally and in CI |
 | Step 8 delivery and CI | Implementation commit `f2c31eb` is pushed to `main`; GitHub Actions run `38263718340` succeeded on October 12, including both test targets |
 | Publication | The case study, decisions, validation record, and architecture diagram were merged to portfolio `main` through [PR 1](https://github.com/jwhite-dataarchitect/cloud-data-architecture-examples/pull/1) on October 12 |
 | Ingest-to-query integration | Real splitter, embedding adapter with deterministic vectors, PostgreSQL upsert, hybrid retrieval, LangGraph, and FastAPI request path completed with mocked Gemini calls |
@@ -20,23 +21,24 @@ provider-backed end-to-end query; partial cloud teardown.
 | Live query | One non-sensitive `POST /v1/query` completed retrieval, synthesis, and grounding with a supported verdict |
 | Terraform plans | Persistent and disposable plans reported no changes before teardown |
 | VM and database teardown | The approved guarded teardown removed the VM and Cloud SQL instance/database; cost audit found no VM or SQL instance |
-| Final disposable teardown | **Pending.** The last audited Terraform state contained the dev VPC, reserved range, Private Service Access connection, and API service registrations while Cloud SQL producer resources age out; no new cloud audit was performed for this documentation update |
+| Final disposable teardown | On October 14, a reviewed plan destroyed the 11 remaining disposable Terraform resources, including the dev VPC, Private Service Access connection/range, and Terraform registration resources for enabled APIs. The apply completed without force options; APIs remain enabled by configuration and disposable state is empty |
+| Cost sweep | No Compute instances or Cloud SQL instances remain. Asset Inventory returned a historical dev-bucket record last updated October 1; direct bucket lookup returned 404 and the current bucket listing had no match, so no live bucket was found or deleted |
+| Persistent resources | The durable source bucket, Artifact Registry repository, and Secret Manager entries were verified to remain. The separately configured provider-budget ledger bucket and runtime IAM have not been applied |
 | Cloud drift repair | **Not performed.** No disposable runtime is currently running; local application fault tests are not cloud drift tests |
 
-## Deferred teardown verification
+## Teardown verification
 
-The Cloud SQL deletion was recorded at 2026-10-10 03:00 UTC. Google Cloud
-documents that producer resources can take up to four days to clear. Do not
-force-delete the Private Service Access connection. Retry the guarded dev
-teardown no earlier than 2026-10-14 03:00 UTC, review a fresh plan, then run the
-cost sweep. Confirm the disposable Terraform state is empty, no dev VM or SQL
-instance remains, and persistent resources are still present. Update this
-record with the observed results; the checks are not represented as complete
-yet.
+The guarded destroy used a fresh reviewed plan after the Cloud SQL producer
+resource wait period. The disposable Terraform state is empty; Compute and
+Cloud SQL inventory is empty; and persistent source, image, and Secret Manager
+resources remain. The Asset Inventory bucket record is stale based on its
+October 1 update time and the current storage API/list results. No force-delete
+operation was used. The provider-budget ledger bucket and runtime IAM remain
+configured but unapplied.
 
 ## What the results do not establish
 
-- Three integration tests do not establish broad fault coverage, load capacity,
+- Five integration tests do not establish broad fault coverage, load capacity,
   or production reliability.
 - Deterministic embeddings prove the database and retrieval plumbing, not
   embedding quality.
@@ -51,7 +53,8 @@ yet.
 
 Raw logs, Terraform state and plans, account identifiers, private endpoints,
 credentials, and local operator configuration are intentionally excluded.
-Existing local and CI results were reviewed for this documentation update;
-no tests were rerun and no cloud resources were created or destroyed.
+The October 14 teardown and inventory checks were performed for this update.
+No cloud resources were created; the disposable resources listed above were
+destroyed.
 See [architecture](architecture.md) and
 [the remaining decisions and work](decisions.md#remaining-decisions-and-work).
