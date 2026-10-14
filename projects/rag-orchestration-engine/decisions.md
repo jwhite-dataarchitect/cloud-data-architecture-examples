@@ -1,6 +1,6 @@
 # Decisions and tradeoffs
 
-**Reconciled:** October 12, 2026. The following choices are resolved for the
+**Reconciled:** October 14, 2026. The following choices are resolved for the
 current demonstration; related production capabilities and validation gaps
 remain separately tracked below.
 
@@ -10,7 +10,7 @@ remain separately tracked below.
 | Dense and lexical retrieval | Provide semantic similarity and exact-term matching for different query/document characteristics | Two retrieval paths add database work and require ranking fusion |
 | Reciprocal Rank Fusion, `k=60` | Combine ranked lists without calibrating heterogeneous raw scores | The constant is a design choice, not a tuned benchmark result |
 | OpenAI `text-embedding-3-small`, 1536 dimensions | Match the implemented embedding client and database vector schema | External provider dependency, data egress, spend, and model-version compatibility |
-| Recursive character splitter, 512-character chunks and 64-character overlap by default | Record the implemented, overridable demo defaults | Not token-based or quality-tuned; the zero-overlap integration fixture and prewritten seed passages do not certify default chunking quality |
+| Recursive character splitter, 512-character chunks and 64-character overlap by default | Record the implemented, overridable demo defaults | Not token-based or quality-tuned; an offline check retains six short golden passages at 512/64 and four at 256/32, but the 147-261-character sources do not exercise overlap or long-document retrieval |
 | Gemini for synthesis and grounding | Separate answer generation from evidence review | Typically two model calls per query; review is not independent verification |
 | Withhold unsupported answers | Avoid returning an answer when the grounding verdict is unsupported | Model-based verdicts may be wrong; provider or schema failures remain errors |
 | Sequential LangGraph flow | Make router, retrieval, synthesis, and review stages explicit | Current router is a placeholder; sequential calls increase latency |
@@ -31,26 +31,30 @@ remain separately tracked below.
 - [x] Record implemented splitter defaults rather than leaving chunking choices
   marked undecided; quality tuning is a separate task.
 - [x] Confirm one cloud query completed synthesis and grounding.
-- [x] Complete the current Step 8 scope, commit/push the code, and verify CI.
+- [x] Complete Decision 8 as a GCS-backed incremental ingestion asset with
+  generation tracking and source deletion handling; live GCS access remains
+  unverified.
+- [x] Resolve Decision 12 as rehydration-only recovery for indexed documents
+  from current GCS objects; deleted or overwritten objects are not recoverable.
 - [x] Publish the four RAG case-study documents and architecture diagram on the
   portfolio default branch.
 
 ## Remaining decisions and work
 
-- [ ] Select Dagster partitioning/incremental sync and implement source ingestion.
-  The diagnostic health asset is not an ingestion pipeline.
+- [ ] Decision 7: chunk size and overlap (512 characters, 64 overlap) are
+  implemented defaults that have not been tuned against the golden evaluation
+  set. The four short source passages do not exercise overlap; revisit when a
+  representative long-document golden set is available.
 - [ ] Implement real query routing, an embedding cache, and metadata-filtered
   retrieval.
 - [ ] Decide application access/privacy controls. IAP ingress is resolved but
   does not implement application authentication or PII scrubbing.
-- [ ] Decide snapshot versus rehydration-only recovery and implement the
-  recovery path; the disposable database has no automated backups/PITR.
 - [ ] Decide and implement provider spend caps; per-call output limits and
   cloud budget notifications do not cap total provider spend.
 - [ ] Decide manual-only versus scheduled teardown. Guarded manual teardown
   exists; TTL labels do not automatically delete resources.
-- [ ] Complete delayed teardown, cost/state verification, and evidence update
-  after October 14, 2026 at 03:00 UTC.
+- [ ] Verify final disposable teardown, empty state, cost sweep, and retained
+  persistent assets. Do not force-remove Private Service Access.
 - [ ] Cloud drift-and-repair/live fault tests remain unperformed; prior no-change
   plans and local mocked faults do not close this validation gap.
 - [ ] Full live golden answer/grounding evaluation, representative quality/load

@@ -12,8 +12,12 @@ separate from the disposable query database.
 The recursive character splitter defaults to 512 characters with 64-character
 overlap, with constructor overrides available. The sample seed path uses
 prewritten passages and bypasses splitting. Idempotent storage is not an
-embedding cache: repeated ingest currently requests embeddings again. Automated
-Dagster ingestion and source-to-database recovery remain unfinished.
+embedding cache: repeated ingest currently requests embeddings again. A Dagster
+asset incrementally ingests JSON documents from GCS; `make recover` reruns that
+asset to rehydrate indexed documents after database recreation and migrations.
+The GCS integration is tested with mocks, not against a live bucket. Source
+bucket versioning is disabled, so overwritten or deleted objects cannot be
+recovered.
 
 The query path embeds the user's question, runs vector similarity and native
 PostgreSQL full-text search, and combines the ranked results with Reciprocal
@@ -56,8 +60,9 @@ than a separate API container.
 
 GitHub Actions runs the same unit/integration targets on pull requests and
 pushes to the implementation's default branch. The October 12 run passed 36
-unit and 3 integration tests. This verifies the current test harness, not live
-provider behavior or a production deployment.
+unit and 3 integration tests; the October 14 recovery-change run passed both
+targets. This verifies the current test harness, not live provider behavior or
+a production deployment.
 
 ## Boundaries
 
