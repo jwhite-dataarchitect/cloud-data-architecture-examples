@@ -22,8 +22,10 @@ resources.
 | Terraform plans | Persistent and disposable plans reported no changes before teardown |
 | VM and database teardown | The approved guarded teardown removed the VM and Cloud SQL instance/database; cost audit found no VM or SQL instance |
 | Final disposable teardown | On October 14, a reviewed plan destroyed the 11 remaining disposable Terraform resources, including the dev VPC, Private Service Access connection/range, and Terraform registration resources for enabled APIs. The apply completed without force options; APIs remain enabled by configuration and disposable state is empty |
-| Cost sweep | No Compute instances or Cloud SQL instances remain. Asset Inventory returned a historical dev-bucket record last updated October 1; direct bucket lookup returned 404 and the current bucket listing had no match, so no live bucket was found or deleted |
-| Persistent resources | The durable source bucket, Artifact Registry repository, and Secret Manager entries were verified to remain. The separately configured provider-budget ledger bucket and runtime IAM have not been applied |
+| Cost sweep | No Compute instances or Cloud SQL instances remain. A historical Asset Inventory bucket record last updated October 1 was absent from direct lookup and the current bucket listing. A separate unmanaged bucket contains one 49-byte test object and was preserved because ownership is unclear |
+| Artifact Registry follow-up | Three obsolete tags were removed and immutable-tag protection restored. The final tagged image remains; eight untagged manifests remain in the 386.689 MB repository after cleanup encountered a manifest dependency and an operation-level permission error |
+| Persistent resources | The durable source bucket, Artifact Registry repository, and Secret Manager entries were verified to remain. Active secret versions remain enabled at the user's direction; no secret values were read. The separately configured provider-budget ledger bucket and runtime IAM have not been applied |
+| Cost limits | Cloud budgets remain notification-only, not spend caps. This resource inventory did not query itemized billing or establish actual charges |
 | Cloud drift repair | **Not performed.** No disposable runtime is currently running; local application fault tests are not cloud drift tests |
 
 ## Teardown verification
@@ -33,8 +35,11 @@ resource wait period. The disposable Terraform state is empty; Compute and
 Cloud SQL inventory is empty; and persistent source, image, and Secret Manager
 resources remain. The Asset Inventory bucket record is stale based on its
 October 1 update time and the current storage API/list results. No force-delete
-operation was used. The provider-budget ledger bucket and runtime IAM remain
-configured but unapplied.
+operation was used. Three old image tags were removed, but registry cleanup is
+incomplete: eight untagged manifests remain and the repository still reports
+386.689 MB. An unmanaged bucket with one 49-byte object and active Secret
+Manager versions were intentionally retained. The provider-budget ledger
+bucket and runtime IAM remain configured but unapplied.
 
 ## What the results do not establish
 

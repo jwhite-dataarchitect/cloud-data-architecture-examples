@@ -46,7 +46,11 @@ remain separately tracked below.
 - [x] Complete final guarded teardown and state/cost verification on October 14,
   2026. Asset Inventory returned one stale dev-bucket record last updated
   October 1; direct bucket lookup returned 404 and the current bucket listing
-  had no match.
+  had no matching bucket. The later cost follow-up preserved an unmanaged
+  bucket containing one 49-byte object because ownership was unclear. Three
+  obsolete Artifact Registry tags were removed and immutable-tag protection
+  restored, but eight untagged manifests remain after dependency and permission
+  errors. Active Secret Manager versions remain enabled by user direction.
 
 ## Remaining decisions and work
 
@@ -61,8 +65,8 @@ remain separately tracked below.
   plans and local mocked faults do not close this validation gap.
 - [ ] Full live golden answer/grounding evaluation, representative quality/load
   testing, and measured lifecycle targets remain unverified.
-- [ ] Document state access/recovery, image cleanup, and source-data operational
-  retention before team use.
+- [ ] Document state access/recovery, Artifact Registry cleanup policy and
+  permissions, and source-data operational retention before team use.
 
 ## Production evolution
 
