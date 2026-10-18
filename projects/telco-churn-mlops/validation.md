@@ -1,39 +1,52 @@
 # Validation evidence
 
-**Evidence date:** October 18, 2026.
+**Completion and verification date:** October 18, 2026.
 
-**Scope:** four local offline tests and review of private implementation and
-configuration. No cloud execution was performed for this update.
+**Status:** completed demonstration. The project owner confirmed successful
+verification through Gemini-assisted implementation and testing, including
+resolution of the previously documented integration issues. Cloud Run replaced
+Vertex AI as the final container-serving platform.
 
-| Check | Verified outcome or evidence limit |
+## Owner-confirmed outcomes
+
+| Check | Confirmed outcome |
 |---|---|
-| Offline test suite | Four tests passed in the existing Python 3.11 environment |
-| Feature/target extraction | Sample identifiers and targets are excluded from model inputs; target output is binary |
-| Preprocessing | Sample input transforms into a dense numerical array with the expected row count |
-| Held-out transform smoke check | A pipeline fitted on a subset transforms a held-out row; learned statistics are not asserted |
-| Dataset fixture availability | Expected local CSV exists; the test can create a small fixture but does not exercise cleaning |
-| Warehouse ingestion and checks | Code reviewed; no live warehouse load or validation run verified |
-| Full training and model quality | Training/evaluation code reviewed; no full training run or ROC-AUC result recorded |
-| API behavior | Typed request and inference code reviewed; no HTTP, startup, or negative-input tests executed |
-| Scheduled retraining | Asset dependencies and weekly schedule reviewed; no scheduler or successful run verified |
-| Model registration and promotion | Registration paths reviewed; no registry upload, version lineage, or promotion result verified |
-| Cloud delivery | Workflow and IAM reviewed; no CI run history, build, deployment, or live endpoint result verified |
-| Infrastructure lifecycle | Terraform definitions reviewed; no validation, plan/apply, drift repair, inventory, or teardown result established |
+| Data preparation | Ingestion and warehouse validation completed and verified |
+| Model training | Fitting, evaluation, serialization, and model handoff completed and verified |
+| Registration | Registry upload and previously identified integration issues confirmed resolved |
+| Dagster workflow | Extraction and scheduled retraining completed and verified |
+| Inference | Containerized FastAPI inference verified on Cloud Run |
+| Delivery and infrastructure | CI/CD and infrastructure verification completed for the demonstration |
+| Serving-platform choice | Cloud Run selected in place of Vertex AI endpoint serving due to container conventions and parameter requirements |
 
-## What the results do not establish
+These results are attributed to the owner's October 18 confirmation. Raw
+cloud logs and run records were not independently reviewed by Copilot during
+the documentation update. No additional test count, model score, performance
+measurement, or teardown result was supplied for publication.
 
-- Four passing tests are not broad model, API, orchestration, or cloud coverage.
-- The held-out transform smoke check does not prove absence of all data leakage.
-- The fixture-availability test does not verify cleaning logic or dataset
-  quality, despite its cleaning-oriented name.
-- There is no measured predictive-quality, calibration, fairness, latency,
-  load, availability, or cost result in this update.
-- A schedule definition is not an enabled schedule. A workflow is not a
-  successful deployment. Registration is not a verified model promotion.
-- This review does not establish the presence or absence of running cloud
-  resources, continuing charges, or production readiness.
+## Separately executed local checks
 
-Raw logs, datasets, model artifacts, Terraform state and plans, credentials,
-cloud identifiers, and operator-specific configuration remain private.
+Copilot ran the four existing offline tests in a Python 3.11 environment:
+
+- Feature/target extraction on sample records.
+- Dense preprocessing output with the expected sample row count.
+- A held-out transform using preprocessing fitted on a different subset.
+- Local CSV fixture availability.
+
+**Result:** four passed. The held-out transform is a smoke check, not an
+exhaustive leakage assessment; fixture availability does not test cleaning.
+These checks supplement the owner's broader verification rather than defining
+the project's total coverage.
+
+## Scope of the completion claim
+
+The completed demonstration is not a production reliability, security,
+fairness, predictive-quality, or business-impact certification. Numerical
+benchmarks are not published without supplied measurements. Current cloud
+inventory, continuing charges, and teardown status are not established by this
+record.
+
+Source, logs, datasets, model artifacts, Terraform state and plans, credentials,
+cloud identifiers, and operator configuration remain private.
 See [architecture](architecture.md) and
-[remaining work](decisions.md#remaining-decisions-and-work).
+[production considerations](decisions.md#production-considerations).

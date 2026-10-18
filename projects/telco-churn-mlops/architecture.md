@@ -2,79 +2,68 @@
 
 ![Data, model, and delivery boundaries](../../assets/telco-churn-mlops/architecture.svg)
 
-The diagram describes implementation responsibilities and intended handoffs,
-not an inventory of deployed services. Dashed connections identify integration
-work that has not been verified.
+This describes the completed demonstration confirmed by the project owner on
+October 18, 2026. It is a logical architecture, not a current cloud-resource
+inventory or an assertion that every resource is Terraform-managed.
 
 ## Data plane
 
-A local ingestion path normalizes column names and string values, converts
-total charges to numeric values, and replaces a BigQuery staging table.
-Warehouse checks cover key integrity, numerical nulls, target labels, and one
-service-consistency condition.
+CSV preparation normalizes customer fields and loads BigQuery staging.
+Warehouse checks cover key integrity, numerical nulls, target labels, and
+service consistency. The owner confirmed the preparation and validation flow.
 
-The Dagster extraction asset reads staging directly. It does not invoke the
-ingestion/validation entry point, so warehouse validation is not yet an
-orchestrated prerequisite for retraining.
+Batch staging replacement is not an incremental ingestion or exactly-once
+guarantee. Source ownership and recovery remain important operating concerns.
 
 ## Model lifecycle
 
-Training selects 19 ordered features and a binary churn target, performs a
-stratified train/test split, and fits numerical imputation/scaling,
-categorical encoding, and logistic regression together. Keeping fitted
-preprocessing inside the serialized pipeline reduces training/serving drift.
-The reported evaluation metric is ROC-AUC; no measured score is published here.
+Training selects 19 ordered features and a binary target, splits training and
+test data, and fits imputation, scaling, categorical encoding, and logistic
+regression together. Keeping fitted preprocessing with the classifier reduces
+training/serving drift.
 
-Dagster defines extraction and dependent retraining assets with a Sunday
-00:00 UTC schedule. A running scheduler, durable execution environment,
-successful materialization, and failure recovery have not been verified.
-
-Training also attempts inline registration. A separate registration path
-uploads a serialized model to Cloud Storage before Vertex AI registration.
-Their artifact names, image versions, and model selection conventions differ.
-There is no verified, immutable training-to-registry handoff or quality gate.
+Dagster organizes extraction and dependent retraining with a weekly schedule.
+The owner confirmed training, scheduled execution, registration, and resolution
+of the previously identified artifact/configuration handoff issues.
+No measured ROC-AUC value is published in this case study.
 
 ## Online inference
 
-FastAPI loads a local fitted pipeline at startup and accepts batches of typed
-customer records. It returns a churn label and positive-class probability per
-record. The runtime container packages an existing model file; it does not
-retrieve a promoted registry version automatically.
+FastAPI loads the fitted pipeline and accepts typed customer batches, returning
+a churn label and positive-class probability per record. The API and model
+are packaged for Cloud Run.
 
-A separate script targets managed Vertex AI endpoint serving. That path is
-distinct from the FastAPI/Cloud Run container and is not invoked by the
-application delivery workflow. Prebuilt-container compatibility remains
-unverified.
+Cloud Run is the final serving platform, replacing the explored Vertex AI
+endpoint path. Vertex AI's strict container conventions and parameter
+requirements added constraints to this custom API; Cloud Run allowed the
+application's serving contract to remain explicit.
+
+Registry use and serving-platform selection are separate concerns. The presence
+of Vertex AI registration utilities does not mean inference runs on a Vertex
+endpoint or that every registry version is automatically promoted.
 
 ## Identity and delivery
 
-Terraform declares a deployment identity, project IAM bindings, and GitHub
-OIDC federation scoped to the private implementation repository. Authentication
-is keyless; current permissions are broader than a production least-privilege
-design, and some role bindings overlap.
+Terraform records deployment identity and IAM relationships, including GitHub
+OIDC federation for keyless authentication. GitHub Actions connects tests,
+cloud authentication, image build, and Cloud Run deployment. The owner
+confirmed infrastructure and CI/CD verification for the demonstration.
 
-The delivery workflow defines tests, cloud authentication, a Cloud Build
-submission, and Cloud Run deployment. Its image tag uses a container-registry
-path, but Terraform does not declare an Artifact Registry repository. Project
-creation, service enablement, model storage, and serving resources are also
-outside the current Terraform definitions.
+Keyless authentication avoids a stored deployment key; it does not by itself
+establish a production least-privilege or access-control certification.
 
 ## Boundaries
 
-- Typed fields do not enforce complete category domains, sensible numeric
-  ranges, a nonempty batch, or a maximum batch size.
-- Model quality, calibration, business thresholds, and drift monitoring are
-  not established by the existing tests.
-- Artifact naming and serving dependencies need reconciliation; registration
-  is not promotion, and a weekly definition is not demonstrated automation.
-- The workflow requests unauthenticated access, and the API has no
-  application-level authentication or authorization. Access design is required
-  before broader use.
-- Replacing staging data requires recovery and ownership controls. Dedicated
-  runtime identities, protected state, lifecycle management, and cost controls
-  remain production considerations.
-- No cloud resource identifiers, private endpoints, deployment commands,
-  executable templates, or operator configuration are published here.
+- Project completion is based on the owner's Gemini-assisted verification.
+  Copilot's separate local checks are documented in [validation](validation.md).
+- Typed inference and a successful demonstration are not exhaustive domain,
+  privacy, security, load, fairness, or reliability assessments.
+- Model quality, calibration, business thresholds, monitoring, rollback, and
+  access policies require workload-specific decisions before production use.
+- Resource inventory, continuing costs, and teardown are not reported by this
+  completion record.
+- No cloud identifiers, private endpoints, implementation source, executable
+  templates, or operator configuration are published here.
 
 See [decisions and tradeoffs](decisions.md) or return to the
 [project overview](README.md).

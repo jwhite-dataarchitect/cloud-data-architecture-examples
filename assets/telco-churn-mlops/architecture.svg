@@ -1,72 +1,58 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="780" viewBox="0 0 1120 780" role="img" aria-labelledby="title description">
-  <title id="title">Telco churn data, model, and delivery boundaries</title>
-  <desc id="description">CSV preparation loads BigQuery with separate warehouse checks. Dagster defines extraction and training with shared preprocessing. Artifact registration and serving handoffs remain unverified. A separate GitHub Actions path defines federated authentication, Cloud Build, and Cloud Run delivery. Terraform currently declares deployment IAM and federation only. No cloud execution is implied.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="700" viewBox="0 0 1120 700" role="img" aria-labelledby="title description">
+  <title id="title">Completed Telco churn demonstration with Cloud Run serving</title>
+  <desc id="description">Data preparation and warehouse checks support BigQuery staging. Dagster extraction and retraining produce a fitted preprocessing and classifier artifact. FastAPI serves the model on Cloud Run. GitHub Actions uses federated authentication for image build and Cloud Run delivery. Model registration is separate from serving. Owner-verified October 18, 2026; not a live resource inventory.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155"/>
     </marker>
   </defs>
-  <rect width="1120" height="780" fill="#f8fafc"/>
+  <rect width="1120" height="700" fill="#f8fafc"/>
   <g font-family="Arial, sans-serif" fill="#0f172a" text-anchor="middle">
-    <text x="560" y="34" font-size="23" font-weight="bold">Telco churn: data, model, and delivery boundaries</text>
-    <text x="560" y="60" font-size="14">Implementation map - not a verified cloud deployment</text>
+    <text x="560" y="35" font-size="23" font-weight="bold">Telco churn: completed demonstration</text>
+    <text x="560" y="62" font-size="14">Owner-verified October 18, 2026 - Cloud Run is the final serving platform</text>
     <g fill="#e0f2fe" stroke="#0369a1" stroke-width="2">
-      <rect x="35" y="100" width="220" height="85" rx="9"/>
-      <rect x="350" y="100" width="220" height="85" rx="9"/>
-      <rect x="710" y="100" width="350" height="85" rx="9"/>
-      <rect x="350" y="265" width="220" height="95" rx="9"/>
-      <rect x="710" y="265" width="350" height="95" rx="9"/>
-      <rect x="350" y="440" width="220" height="90" rx="9"/>
-      <rect x="710" y="440" width="350" height="90" rx="9"/>
-      <rect x="35" y="625" width="220" height="75" rx="9"/>
-      <rect x="350" y="625" width="220" height="75" rx="9"/>
-      <rect x="710" y="625" width="350" height="75" rx="9"/>
+      <rect x="35" y="105" width="285" height="90" rx="9"/>
+      <rect x="410" y="105" width="285" height="90" rx="9"/>
+      <rect x="785" y="105" width="300" height="90" rx="9"/>
+      <rect x="410" y="290" width="285" height="90" rx="9"/>
+      <rect x="785" y="290" width="300" height="90" rx="9"/>
+      <rect x="35" y="475" width="285" height="90" rx="9"/>
+      <rect x="410" y="475" width="285" height="90" rx="9"/>
+      <rect x="785" y="475" width="300" height="90" rx="9"/>
     </g>
     <g font-size="17">
-      <text x="145" y="135">CSV preparation</text>
-      <text x="145" y="161">Normalize and replace</text>
-      <text x="460" y="135">BigQuery staging</text>
-      <text x="460" y="161">Training source</text>
-      <text x="885" y="135">Warehouse validation</text>
-      <text x="885" y="161">Separate entry point; not a training gate</text>
-      <text x="460" y="300">Dagster extraction</text>
-      <text x="460" y="326">Weekly job definition</text>
-      <text x="885" y="298">Preprocessing + logistic regression</text>
-      <text x="885" y="325">Split before fitting; serialize pipeline</text>
-      <text x="460" y="476">GCS / Vertex registry</text>
-      <text x="460" y="503">Separate upload path</text>
-      <text x="885" y="476">FastAPI / Cloud Run</text>
-      <text x="885" y="503">Packaged local model; typed requests</text>
-      <text x="145" y="656">GitHub Actions</text>
-      <text x="145" y="682">Tests and WIF auth</text>
-      <text x="460" y="656">Cloud Build</text>
-      <text x="460" y="682">Image / registry path</text>
-      <text x="885" y="656">Cloud Run delivery definition</text>
-      <text x="885" y="682">Separate from model promotion</text>
+      <text x="177" y="139">CSV preparation</text>
+      <text x="177" y="166">Warehouse checks</text>
+      <text x="552" y="139">BigQuery staging</text>
+      <text x="552" y="166">Normalized customer data</text>
+      <text x="935" y="139">Dagster</text>
+      <text x="935" y="166">Extraction / scheduled retraining</text>
+      <text x="552" y="324">Fitted model artifact</text>
+      <text x="552" y="351">Preprocessing + classifier</text>
+      <text x="935" y="324">FastAPI on Cloud Run</text>
+      <text x="935" y="351">Typed batch inference</text>
+      <text x="177" y="509">GitHub Actions</text>
+      <text x="177" y="536">Tests / federated authentication</text>
+      <text x="552" y="509">Cloud Build</text>
+      <text x="552" y="536">Container image</text>
+      <text x="935" y="509">Cloud Run delivery</text>
+      <text x="935" y="536">Application release</text>
     </g>
     <g fill="none" stroke="#334155" stroke-width="2" marker-end="url(#arrow)">
-      <path d="M255 142 H350"/>
-      <path d="M570 142 H710"/>
-      <path d="M460 185 V265"/>
-      <path d="M570 312 H710"/>
-      <path d="M255 662 H350"/>
-      <path d="M570 662 H710"/>
-      <path d="M885 625 V530"/>
-    </g>
-    <g fill="none" stroke="#334155" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#arrow)">
-      <path d="M795 360 V398 H460 V440"/>
-      <path d="M975 360 V440"/>
+      <path d="M320 150 H410"/>
+      <path d="M695 150 H785"/>
+      <path d="M935 195 V240 H552 V290"/>
+      <path d="M695 335 H785"/>
+      <path d="M320 520 H410"/>
+      <path d="M695 520 H785"/>
+      <path d="M935 475 V380"/>
     </g>
     <g font-size="13">
-      <text x="640" y="128">Check staging</text>
-      <text x="630" y="299">Asset dependency</text>
-      <text x="600" y="389">Artifact / registration alignment open</text>
-      <text x="1010" y="400">Handoff</text>
-      <text x="1010" y="417">unverified</text>
-      <text x="460" y="556">Vertex endpoint script is a separate serving path</text>
-      <text x="560" y="590">Solid: defined flow | Dashed: unverified model handoff | No automatic registry-to-API promotion</text>
+      <text x="747" y="321">Package</text>
+      <text x="552" y="413">Model registration is separate from online serving; registry use does not require a Vertex endpoint.</text>
+      <text x="560" y="606">Serving decision: Cloud Run replaced Vertex AI endpoint serving due to container conventions and required parameters.</text>
     </g>
-    <text x="560" y="739" font-size="16" font-weight="bold">Terraform: deployment IAM and federation only; full infrastructure lifecycle remains open</text>
-    <text x="560" y="763" font-size="13">Conceptual diagram - no code, cloud identifiers, private endpoints, or operational configuration</text>
+    <text x="560" y="644" font-size="16" font-weight="bold">Terraform: deployment IAM and federation - keyless identity is not a production certification</text>
+    <text x="560" y="675" font-size="13">Logical architecture, not a live inventory - no implementation code, cloud identifiers, or private configuration</text>
   </g>
 </svg>
