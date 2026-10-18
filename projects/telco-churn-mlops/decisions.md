@@ -1,44 +1,49 @@
 # Decisions and tradeoffs
 
+**Status:** completed demonstration, owner-verified on October 18, 2026.
+
 | Decision | Reason | Tradeoff or production consideration |
 |---|---|---|
-| Warehouse staging before training | Separate normalization and data checks from model fitting | Full-table replacement needs source ownership, recovery, and schema enforcement |
-| Preprocessing and classifier in one pipeline | Fit transforms on training data and retain them with the model | Artifact provenance, dependency compatibility, and ordered inputs remain essential |
-| Logistic regression baseline | Start with a compact model before adding complexity | Ranking quality alone does not establish calibration, fairness, or business value |
-| Ordered feature contract | Support array-oriented inference in a managed serving path | Positional inputs can silently drift without explicit contract tests |
-| FastAPI with Pydantic | Express structured batch requests and probability responses | Type validation is not complete domain validation or access control |
-| Dagster assets | Make warehouse extraction and retraining dependencies visible | Schedule activation, hosting, durable outputs, and failure recovery are separate responsibilities |
-| Separate registration and endpoint scripts | Explore managed registry and serving capabilities independently | Divergent artifact contracts and two serving paths add integration overhead |
-| Federated CI authentication | Avoid storing a long-lived deployment key in GitHub | Keyless authentication does not prove least privilege or safe runtime exposure |
-| Terraform-managed identity relationships | Review deployment access as configuration | The current definitions do not yet manage the complete cloud stack |
-| Private code, public case study | Make design reasoning and evidence accessible without publishing implementation | Demonstrations and deeper implementation review require an approved walkthrough |
+| Warehouse staging before training | Separate normalized analytical data and checks from fitting | Batch replacement needs source ownership and recovery controls |
+| Preprocessing and classifier in one pipeline | Retain fitted transforms with the model and split before fitting | Artifact provenance, dependency compatibility, and feature order remain essential |
+| Logistic regression baseline | Start with a compact, inspectable classifier | Ranking quality alone does not establish calibration, fairness, or business value |
+| FastAPI with Pydantic | Express structured batch requests and probability responses | Production validation and access policies remain workload-specific |
+| Dagster assets and scheduled retraining | Make data/model dependencies and recurring execution explicit | Runtime operations, monitoring, and recovery still need ownership |
+| Cloud Run instead of Vertex AI endpoint serving | Fit the custom API without adopting Vertex AI's strict container conventions and required parameters | Model packaging and serving behavior remain application responsibilities |
+| Registration distinct from inference | Keep model lifecycle records separate from the serving runtime choice | A registry entry is not itself a deployment or promotion policy |
+| Federated CI authentication | Avoid a long-lived deployment key in GitHub | Keyless authentication is not a blanket least-privilege guarantee |
+| Terraform-managed deployment IAM | Review identity relationships as configuration | Do not infer full environment coverage from one infrastructure file |
+| Private code, public case study | Make reasoning and outcomes accessible without publishing implementation | Deeper implementation review requires an approved walkthrough |
+
+## Serving-platform decision
+
+Vertex AI was explored for online serving. Its container conventions and
+parameter requirements introduced constraints that were unnecessary for this
+demonstration's custom FastAPI path. Cloud Run became the final serving
+platform, and the owner verified the resulting containerized inference flow.
+
+This was an engineering tradeoff, not unfinished Vertex endpoint deployment.
+Cloud Run and a model registry address different responsibilities; choosing
+Cloud Run does not remove the need for deliberate model packaging and release
+management.
 
 ## Engineering lessons
 
-The important boundary is not simply whether components exist. A saved model,
-a registry upload, an image build, and a running API are different lifecycle
-events. They need a shared artifact identity and explicit promotion rules
-before they form a repeatable delivery system.
+A saved model, registry upload, container build, and running API are distinct
+lifecycle events. Their integration was part of the owner's completed
+verification, not something established merely by the existence of those
+components.
 
-Likewise, a passing preprocessing smoke test is narrower evidence than
-warehouse quality, valid API behavior, successful scheduled training, or
-deployment readiness. This case study records those distinctions rather than
-describing configuration as a completed operational outcome.
+Evidence also has different sources. The owner used Gemini for coding,
+testing, and verification, and Copilot for repository management and
+documentation. The validation record preserves that distinction rather than
+limiting the project status to Copilot's four local tests.
 
-## Remaining decisions and work
+## Production considerations
 
-- Align artifact names, dependency versions, registry identity, and serving
-  contracts; separate local training from cloud registration.
-- Choose the intended serving path and define immutable artifact lineage,
-  evaluation gates, promotion, and rollback.
-- Make warehouse validation a training dependency and strengthen tests for
-  leakage, invalid labels, feature order, API inputs, and inference failures.
-- Centralize environment configuration and remove deployment-specific literals
-  from reusable private components.
-- Complete infrastructure declarations, review IAM scope, and establish
-  dedicated runtime identities and protected state.
-- Add durable scheduling, monitoring, cost ownership, and cloud fault/recovery
-  evidence before making operational claims.
+Beyond the completed demonstration, broader use requires decisions about
+authentication, authorization, model governance, monitoring, drift, recovery,
+promotion/rollback, dependency reproducibility, and cost ownership.
+These are production considerations, not a remaining project-completion list.
 
-These are open engineering items, not capabilities delivered by publication.
 See [validation](validation.md) or return to the [project overview](README.md).
