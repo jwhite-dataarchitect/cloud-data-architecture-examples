@@ -13,9 +13,11 @@ and operational recovery.
 |---|---|---|---|
 | [Serverless ingestion orchestration](projects/ingestion-orchestration/README.md) | Designed and validated a scheduled transfer workflow with keyless execution, failure notifications, and operator-driven infrastructure drift repair | GCP, Terraform, rclone, containers | E2E-validated demonstration |
 | [RAG orchestration engine](projects/rag-orchestration-engine/README.md) | Designed a hybrid retrieval and grounded-answer workflow with disposable cloud runtime, repeatable integration tests, and explicit validation boundaries | Python, LangGraph, PostgreSQL, pgvector, Gemini, OpenAI, GCP, Terraform | E2E query and CI verified; case study published; cloud closeout pending |
+| [Telco churn MLOps](projects/telco-churn-mlops/README.md) | Designed a warehouse-to-model workflow with shared preprocessing, asset-oriented retraining, typed inference, and keyless delivery configuration | Python, BigQuery, scikit-learn, FastAPI, Dagster, Vertex AI, Terraform | Four offline tests passed; cloud integration and model promotion remain unverified |
 
-**Next:** a Python/Dagster ETL project that builds on reusable ingestion patterns.
-This is planned work, not an implemented or validated capability.
+The Telco churn case study extends the portfolio into asset-oriented data and
+model workflows. Its implemented components and remaining integration work are
+documented separately from the cloud-validated ingestion demonstration.
 
 ## Engineering focus
 
@@ -30,6 +32,10 @@ This is planned work, not an implemented or validated capability.
 
 ## Explore the case studies
 
+- [Telco churn project overview](projects/telco-churn-mlops/README.md)
+- [Telco churn architecture](projects/telco-churn-mlops/architecture.md)
+- [Telco churn decisions and tradeoffs](projects/telco-churn-mlops/decisions.md)
+- [Telco churn validation results](projects/telco-churn-mlops/validation.md)
 - [RAG project overview](projects/rag-orchestration-engine/README.md)
 - [RAG architecture](projects/rag-orchestration-engine/architecture.md)
 - [RAG decisions and tradeoffs](projects/rag-orchestration-engine/decisions.md)
