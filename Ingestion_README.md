@@ -40,10 +40,10 @@ are documented with explicit attribution of owner verification and local checks.
 - [RAG architecture](projects/rag-orchestration-engine/architecture.md)
 - [RAG decisions and tradeoffs](projects/rag-orchestration-engine/decisions.md)
 - [RAG validation results](projects/rag-orchestration-engine/validation.md)
-- [Project overview](projects/ingestion-orchestration/README.md)
-- [Architecture](projects/ingestion-orchestration/architecture.md)
-- [Decisions and tradeoffs](projects/ingestion-orchestration/decisions.md)
-- [Validation results](projects/ingestion-orchestration/validation.md)
+- [Ingestion project overview](projects/ingestion-orchestration/README.md)
+- [Ingestion architecture](projects/ingestion-orchestration/architecture.md)
+- [Ingestion decisions and tradeoffs](projects/ingestion-orchestration/decisions.md)
+- [Ingestion validation results](projects/ingestion-orchestration/validation.md)
 
 ![Serverless ingestion architecture](assets/ingestion-orchestration/architecture.svg)
 
