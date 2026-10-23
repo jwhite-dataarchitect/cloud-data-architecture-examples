@@ -30,4 +30,7 @@
   when needed to explain the architecture.
 - A request to showcase, mirror, or update a project's architecture means
   documentation and diagrams by default, not publication of implementation code.
+- Base implementation examples in Google Cloud, using cloud-agnostic tools where
+  appropriate. Discuss AWS and Azure only at the architecture level; do not
+  present projects or implementations built for those platforms.
 - Preserve the existing portfolio license and documentation-only boundary.

@@ -52,6 +52,13 @@ are documented with explicit attribution of owner verification and local checks.
 This repository is a documentation-only showcase. Implementation is maintained
 privately; a technical walkthrough is available on request.
 
+## Cloud scope
+
+Implementation examples are based in Google Cloud, with cloud-agnostic tools
+used where appropriate. AWS and Azure may appear only as architecture-level
+alternatives or comparisons; this portfolio does not present projects or
+implementations built for either platform.
+
 There are no deployable applications, infrastructure templates, credentials, or
 operational runbooks here. Results describe an isolated demonstration, not a
 production certification or guaranteed service level.
